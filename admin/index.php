@@ -175,10 +175,10 @@ foreach ($weekly_summary as $entry) {
         <div class="admin-section">
             <h2>Clock Management</h2>
             <form method="post" class="button-group">
-                <select name="admin_employee" required>
+                <select name="admin_employee">
                     <option value="">Select Employee</option>
                     <?php foreach ($employees as $emp) { ?>
-                        <option value="<?php echo htmlspecialchars($emp['username']); ?>" <?php echo $admin_employee === $emp['username'] ? 'selected' : ''; ?>>
+                        <option value="<?php echo htmlspecialchars($emp['username']); ?>">
                             <?php echo htmlspecialchars($emp['username']); ?>
                         </option>
                     <?php } ?>
@@ -189,8 +189,8 @@ foreach ($weekly_summary as $entry) {
                 <button type="submit" name="admin_action" value="break_out">End Break</button>
             </form>
             <?php if (hasRole($logged_in_user, 'admin')) { ?>
-                <form method="post" class="button-group" style="margin-top: 10px;">
-                    <button type="submit" name="clock_out_all" class="clock-out-all-btn">Clock Out All Employees</button>
+                <form method="post" class="button-group">
+                    <button type="submit" name="clock_out_all">Clock Out All Employees</button>
                 </form>
             <?php } ?>
         </div>
