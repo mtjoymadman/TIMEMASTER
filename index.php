@@ -1,10 +1,9 @@
 <?php
 session_start();
-date_default_timezone_set('America/New_York'); // Force EDT (UTC-4)
 require_once 'functions.php';
 
-// Redirect to login if not authenticated or not an employee
-if (!isset($_SESSION['username']) || !hasRole($_SESSION['username'], 'employee')) {
+// Redirect to login if not authenticated or not an employee/admin
+if (!isset($_SESSION['username']) || (!hasRole($_SESSION['username'], 'employee') && !hasRole($_SESSION['username'], 'admin'))) {
     header("Location: login.php");
     exit;
 }
@@ -12,42 +11,58 @@ if (!isset($_SESSION['username']) || !hasRole($_SESSION['username'], 'employee')
 $username = $_SESSION['username'];
 $action = $_POST['action'] ?? '';
 
-if ($action) {
-    switch ($action) {
-        case 'clock_in': clockIn($username); break;
-        case 'clock_out': clockOut($username); break;
-        case 'break_in': breakIn($username); break;
-        case 'break_out': breakOut($username); break;
-        case 'logout': 
-            session_destroy();
-            header("Location: login.php");
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        if (isset($_POST['switch_mode']) && $_POST['switch_mode'] === 'admin') {
+            header("Location: admin/index.php");
             exit;
-            break;
+        }
+        switch ($action) {
+            case 'clock_in': 
+                if (!clockIn($username)) {
+                    $error = "You are already clocked in.";
+                }
+                break;
+            case 'clock_out': 
+                if (!clockOut($username)) {
+                    $error = "You must end your break before clocking out.";
+                }
+                break;
+            case 'break_in': 
+                if (!breakIn($username)) {
+                    $error = "You must be clocked in to start a break.";
+                }
+                break;
+            case 'break_out': 
+                if (!breakOut($username)) {
+                    $error = "You are not currently on break.";
+                }
+                break;
+            case 'logout': 
+                session_destroy();
+                header("Location: login.php");
+                exit;
+                break;
+        }
+    } catch (Exception $e) {
+        $error = "An error occurred. Please try again.";
+        error_log($e->getMessage());
     }
 }
 
 $records = getTimeRecords($username, $_POST['date'] ?? null);
 $is_suspended = isSuspended($username);
-
-// Determine current status and hours worked
-$status = "Clocked Out";
-$hours_worked = 0;
+$status = getCurrentStatus($username);
+$hours_worked = getHoursWorked($username);
 $current_date = '';
-$stmt = $db->prepare("SELECT clock_in, clock_out FROM time_records WHERE username = ? AND clock_out IS NULL");
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$result = $stmt->get_result()->fetch_assoc();
-if ($result) {
-    $status = "Clocked In";
-    $clock_in_time = strtotime($result['clock_in']);
-    $current_date = date('Y-m-d', $clock_in_time);
-    $current_time = strtotime("2025-03-17 23:03:00"); // 11:03 PM EDT forced as "now"
-    $hours_worked = ($current_time - $clock_in_time) / 3600; // Hours since clock_in
-    $stmt = $db->prepare("SELECT break_in, break_out FROM breaks WHERE time_record_id = (SELECT id FROM time_records WHERE username = ? AND clock_out IS NULL) AND break_out IS NULL");
+
+if ($status !== "Clocked Out") {
+    $stmt = $db->prepare("SELECT clock_in FROM time_records WHERE username = ? AND clock_out IS NULL ORDER BY clock_in DESC LIMIT 1");
     $stmt->bind_param("s", $username);
     $stmt->execute();
-    if ($stmt->get_result()->fetch_assoc()) {
-        $status = "On Break";
+    $result = $stmt->get_result()->fetch_assoc();
+    if ($result) {
+        $current_date = getEdtTime($result['clock_in'])->format('Y-m-d');
     }
 }
 ?>
@@ -63,14 +78,18 @@ if ($result) {
     </header>
     <div class="container employee-page">
         <form method="post" class="logout-form" style="text-align: right; margin-bottom: 10px;">
-            <button type="submit" name="action" value="logout" class="logout-button" style="background-color: #ff4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Logout</button>
+            <button type="submit" name="action" value="logout" class="logout-button">Logout</button>
         </form>
         <h1>TIMEMASTER</h1>
         
         <?php if ($is_suspended) { ?>
             <p style="color: #ff4444; text-align: center;">See your administrator for access, you are currently suspended.</p>
         <?php } else { ?>
-            <form method="post" class="button-group">
+            <?php if (isset($error)) { ?>
+                <p style="color: #ff4444; text-align: center;"><?php echo htmlspecialchars($error); ?></p>
+            <?php } ?>
+            
+            <form method="post" class="button-group" style="display: flex; justify-content: center;">
                 <div>
                     <button type="submit" name="action" value="clock_in" class="<?php echo $status === 'Clocked In' ? 'green-button' : ''; ?>">Clock In</button>
                     <button type="submit" name="action" value="break_in" class="<?php echo $status === 'On Break' ? 'green-button' : ''; ?>">Start Break</button>
@@ -78,12 +97,15 @@ if ($result) {
                     <button type="submit" name="action" value="clock_out" class="<?php echo $status === 'Clocked Out' ? 'green-button' : ''; ?>">Clock Out</button>
                 </div>
             </form>
+            
+            <p style="text-align: center; font-size: 1.2em; margin: 20px 0;">Hi, <strong><?php echo htmlspecialchars($username); ?></strong>!</p>
             <p>Current Status: <strong><?php echo $status; ?></strong></p>
             <?php if ($status !== "Clocked Out") { ?>
-                <p>Date: <strong><?php echo $current_date; ?></strong></p>
+                <p>Date: <strong><?php echo formatDate($current_date); ?></strong></p>
                 <p>Hours Worked: <strong><?php echo number_format($hours_worked, 2); ?> hours</strong></p>
             <?php } ?>
-            <p>Current Time: <strong><?php echo date('h:i A'); ?></strong></p> <!-- Displays 11:03 PM -->
+            <p>Current Time: <strong><?php echo getEdtTime()->format('h:i A'); ?></strong></p>
+            
             <form method="post" class="search-form">
                 <input type="date" name="date">
                 <button type="submit">Search Records</button>
@@ -93,31 +115,38 @@ if ($result) {
         <?php if ($records && !$is_suspended) { ?>
             <h2>Your Records</h2>
             <table>
-                <tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Break In</th><th>Break Out</th><th>Break (min)</th></tr>
+                <tr>
+                    <th>Day</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Total Break (min)</th>
+                </tr>
                 <?php 
                 $current_id = null;
                 foreach ($records as $record) { 
                     if ($current_id !== $record['id']) { 
                         $current_id = $record['id'];
+                        // Calculate total break minutes for this record
+                        $total_break_minutes = array_sum(array_map(function($r) {
+                            return $r['break_time'] ?? 0;
+                        }, array_filter($records, fn($r) => $r['id'] === $current_id)));
                 ?>
                     <tr>
-                        <td rowspan="<?php echo count(array_filter($records, fn($r) => $r['id'] === $current_id)); ?>">
-                            <?php echo date('Y-m-d', strtotime($record['clock_in'])); ?>
-                        </td>
-                        <td><?php echo date('h:i A', strtotime($record['clock_in'])); ?></td>
-                        <td><?php echo $record['clock_out'] ? date('h:i A', strtotime($record['clock_out'])) : ''; ?></td>
-                        <td><?php echo $record['break_in'] ? date('h:i A', strtotime($record['break_in'])) : ''; ?></td>
-                        <td><?php echo $record['break_out'] ? date('h:i A', strtotime($record['break_out'])) : ''; ?></td>
-                        <td><?php echo $record['break_time']; ?></td>
-                    </tr>
-                <?php } else { ?>
-                    <tr>
-                        <td><?php echo $record['break_in'] ? date('h:i A', strtotime($record['break_in'])) : ''; ?></td>
-                        <td><?php echo $record['break_out'] ? date('h:i A', strtotime($record['break_out'])) : ''; ?></td>
-                        <td><?php echo $record['break_time']; ?></td>
+                        <td><?php echo formatDate($record['clock_in']); ?></td>
+                        <td><?php echo formatTime($record['clock_in']); ?></td>
+                        <td><?php echo formatTime($record['clock_out']); ?></td>
+                        <td><?php echo $total_break_minutes; ?></td>
                     </tr>
                 <?php } } ?>
             </table>
+        <?php } ?>
+
+        <?php if (hasRole($username, 'admin')) { ?>
+            <div class="admin-section">
+                <form method="post" class="button-group">
+                    <button type="submit" name="switch_mode" value="admin" class="mode-switch-btn">Switch to Admin Mode</button>
+                </form>
+            </div>
         <?php } ?>
     </div>
 </body>

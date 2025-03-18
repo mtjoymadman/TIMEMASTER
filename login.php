@@ -2,20 +2,21 @@
 session_start();
 require_once 'functions.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'])) {
-    $username = trim($_POST['username']);
-    // Check if the username exists and has 'employee' role
-    $stmt = $db->prepare("SELECT username, role FROM employees WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
     
-    if ($result && hasRole($username, 'employee')) {
+    if (authenticateUser($username, $password)) {
         $_SESSION['username'] = $username;
-        header("Location: index.php");
+        // Redirect based on role
+        if (hasRole($username, 'admin')) {
+            header("Location: admin/index.php");
+        } else {
+            header("Location: index.php");
+        }
         exit;
     } else {
-        $error = "Invalid username or you must be an employee to use TIMEMASTER.";
+        $error = "Invalid username or password.";
     }
 }
 ?>

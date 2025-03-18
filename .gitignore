@@ -1,0 +1,18 @@
+# Configuration files with sensitive data
+config.php
+
+# Log files
+*.log
+.git/push_log.txt
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp 

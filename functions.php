@@ -1,11 +1,25 @@
 <?php
+date_default_timezone_set('America/New_York'); // Force EDT (UTC-4)
+
 require_once 'config.php';
+
+function getEdtTime($time = null) {
+    if ($time === null) {
+        return new DateTime('now', new DateTimeZone('America/New_York'));
+    }
+    $dt = new DateTime($time);
+    $dt->setTimezone(new DateTimeZone('America/New_York'));
+    return $dt;
+}
 
 function clockIn($username) {
     global $db;
-    if (isSuspended($username) || !hasRole($username, 'employee')) return false;
-    $stmt = $db->prepare("INSERT INTO time_records (username, clock_in) VALUES (?, NOW())");
-    $stmt->bind_param("s", $username);
+    if (isSuspended($username)) return false;
+    if (!hasRole($username, 'employee') && !hasRole($username, 'admin')) return false;
+    
+    $now = getEdtTime()->format('Y-m-d H:i:s');
+    $stmt = $db->prepare("INSERT INTO time_records (username, clock_in) VALUES (?, ?)");
+    $stmt->bind_param("ss", $username, $now);
     $stmt->execute();
     sendNotification($username, "clocked in");
     return true;
@@ -13,9 +27,12 @@ function clockIn($username) {
 
 function clockOut($username) {
     global $db;
-    if (isSuspended($username) || !hasRole($username, 'employee')) return false;
-    $stmt = $db->prepare("UPDATE time_records SET clock_out = NOW() WHERE username = ? AND clock_out IS NULL");
-    $stmt->bind_param("s", $username);
+    if (isSuspended($username)) return false;
+    if (!hasRole($username, 'employee') && !hasRole($username, 'admin')) return false;
+    
+    $now = getEdtTime()->format('Y-m-d H:i:s');
+    $stmt = $db->prepare("UPDATE time_records SET clock_out = ? WHERE username = ? AND clock_out IS NULL");
+    $stmt->bind_param("ss", $now, $username);
     $stmt->execute();
     checkAutoBreak($username);
     sendNotification($username, "clocked out");
@@ -24,15 +41,18 @@ function clockOut($username) {
 
 function breakIn($username) {
     global $db;
-    if (isSuspended($username) || !hasRole($username, 'employee')) return false;
+    if (isSuspended($username)) return false;
+    if (!hasRole($username, 'employee') && !hasRole($username, 'admin')) return false;
+    
     $stmt = $db->prepare("SELECT id FROM time_records WHERE username = ? AND clock_out IS NULL");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
     if ($result) {
         $time_record_id = $result['id'];
-        $stmt = $db->prepare("INSERT INTO breaks (time_record_id, break_in) VALUES (?, NOW())");
-        $stmt->bind_param("i", $time_record_id);
+        $now = getEdtTime()->format('Y-m-d H:i:s');
+        $stmt = $db->prepare("INSERT INTO breaks (time_record_id, break_in) VALUES (?, ?)");
+        $stmt->bind_param("is", $time_record_id, $now);
         $stmt->execute();
         sendNotification($username, "started break");
         return true;
@@ -42,15 +62,18 @@ function breakIn($username) {
 
 function breakOut($username) {
     global $db;
-    if (isSuspended($username) || !hasRole($username, 'employee')) return false;
+    if (isSuspended($username)) return false;
+    if (!hasRole($username, 'employee') && !hasRole($username, 'admin')) return false;
+    
     $stmt = $db->prepare("SELECT id FROM time_records WHERE username = ? AND clock_out IS NULL");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
     if ($result) {
         $time_record_id = $result['id'];
-        $stmt = $db->prepare("UPDATE breaks SET break_out = NOW(), break_time = TIMESTAMPDIFF(MINUTE, break_in, NOW()) WHERE time_record_id = ? AND break_out IS NULL");
-        $stmt->bind_param("i", $time_record_id);
+        $now = getEdtTime()->format('Y-m-d H:i:s');
+        $stmt = $db->prepare("UPDATE breaks SET break_out = ?, break_time = TIMESTAMPDIFF(MINUTE, break_in, ?) WHERE time_record_id = ? AND break_out IS NULL");
+        $stmt->bind_param("ssi", $now, $now, $time_record_id);
         $stmt->execute();
         sendNotification($username, "ended break");
         return true;
@@ -118,13 +141,62 @@ function addEmployee($username, $flag_auto_break = 0, $roles = ['employee'], $su
 
 function modifyEmployee($old_username, $new_username, $flag_auto_break, $roles, $suspended) {
     global $db;
-    $valid_roles = ['employee', 'admin', 'baby admin', 'driver', 'yardman', 'office'];
-    $roles = array_intersect((array)$roles, $valid_roles);
-    if (!in_array('employee', $roles)) $roles[] = 'employee';
-    $role_string = implode(',', array_unique($roles));
-    $stmt = $db->prepare("UPDATE employees SET username = ?, flag_auto_break = ?, role = ?, suspended = ? WHERE username = ?");
-    $stmt->bind_param("sisis", $new_username, $flag_auto_break, $role_string, $suspended, $old_username);
-    $stmt->execute();
+    try {
+        // Validate inputs
+        if (empty($old_username) || empty($new_username)) {
+            error_log("modifyEmployee: Empty username provided");
+            return false;
+        }
+
+        // Ensure roles is an array
+        if (!is_array($roles)) {
+            $roles = ['employee'];
+        }
+
+        // Validate roles
+        $valid_roles = ['employee', 'admin', 'baby admin', 'driver', 'yardman', 'office'];
+        $roles = array_values(array_intersect($roles, $valid_roles));
+        if (!in_array('employee', $roles)) {
+            $roles[] = 'employee';
+        }
+        $role_string = implode(',', array_unique($roles));
+
+        // Check if new username already exists (excluding the old username)
+        $stmt = $db->prepare("SELECT username FROM employees WHERE username = ? AND username != ?");
+        if (!$stmt) {
+            error_log("modifyEmployee: Prepare failed for username check: " . $db->error);
+            return false;
+        }
+        $stmt->bind_param("ss", $new_username, $old_username);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows > 0) {
+            error_log("modifyEmployee: Username already exists: $new_username");
+            return false;
+        }
+
+        // Update the employee
+        $stmt = $db->prepare("UPDATE employees SET username = ?, flag_auto_break = ?, role = ?, suspended = ? WHERE username = ?");
+        if (!$stmt) {
+            error_log("modifyEmployee: Prepare failed for update: " . $db->error);
+            return false;
+        }
+
+        $stmt->bind_param("sisis", $new_username, $flag_auto_break, $role_string, $suspended, $old_username);
+        if (!$stmt->execute()) {
+            error_log("modifyEmployee: Execute failed: " . $stmt->error);
+            return false;
+        }
+
+        if ($stmt->affected_rows === 0) {
+            error_log("modifyEmployee: No rows affected for username: $old_username");
+            return false;
+        }
+
+        return true;
+    } catch (Exception $e) {
+        error_log("modifyEmployee: Exception: " . $e->getMessage());
+        return false;
+    }
 }
 
 function deleteEmployee($username) {
@@ -136,9 +208,45 @@ function deleteEmployee($username) {
 
 function suspendEmployee($username) {
     global $db;
-    $stmt = $db->prepare("UPDATE employees SET suspended = 1 WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
+    try {
+        // First get current suspension status
+        $stmt = $db->prepare("SELECT suspended FROM employees WHERE username = ?");
+        if (!$stmt) {
+            error_log("suspendEmployee: Prepare failed for status check: " . $db->error);
+            return false;
+        }
+        
+        $stmt->bind_param("s", $username);
+        if (!$stmt->execute()) {
+            error_log("suspendEmployee: Execute failed for status check: " . $stmt->error);
+            return false;
+        }
+        
+        $result = $stmt->get_result()->fetch_assoc();
+        if (!$result) {
+            error_log("suspendEmployee: Employee not found: $username");
+            return false;
+        }
+        
+        // Toggle the suspension status
+        $new_status = $result['suspended'] ? 0 : 1;
+        $stmt = $db->prepare("UPDATE employees SET suspended = ? WHERE username = ?");
+        if (!$stmt) {
+            error_log("suspendEmployee: Prepare failed for update: " . $db->error);
+            return false;
+        }
+        
+        $stmt->bind_param("is", $new_status, $username);
+        if (!$stmt->execute()) {
+            error_log("suspendEmployee: Execute failed for update: " . $stmt->error);
+            return false;
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("suspendEmployee: Exception: " . $e->getMessage());
+        return false;
+    }
 }
 
 function isSuspended($username) {
@@ -178,9 +286,9 @@ function modifyTimeRecord($id, $clock_in, $clock_out, $breaks) {
 
 function getAllEmployees() {
     global $db;
-    $query = "SELECT username FROM employees";
-    $result = $db->query($query)->fetch_all(MYSQLI_ASSOC);
-    return $result ? array_column($result, 'username') : []; // Fix: Null check
+    $query = "SELECT * FROM employees ORDER BY username";
+    $result = $db->query($query);
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function sendNotification($username, $action) {
@@ -296,5 +404,67 @@ function hasRole($username, $role) {
 
 function canManageEmployees($username) {
     return hasRole($username, 'admin') || hasRole($username, 'baby admin');
+}
+
+function getCurrentStatus($username) {
+    global $db;
+    
+    // Check if clocked in
+    $stmt = $db->prepare("SELECT id FROM time_records WHERE username = ? AND clock_out IS NULL ORDER BY clock_in DESC LIMIT 1");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    
+    if (!$result) {
+        return "Clocked Out";
+    }
+    
+    // Check if on break
+    $stmt = $db->prepare("SELECT id FROM breaks WHERE time_record_id = ? AND break_out IS NULL");
+    $stmt->bind_param("i", $result['id']);
+    $stmt->execute();
+    if ($stmt->get_result()->num_rows > 0) {
+        return "On Break";
+    }
+    
+    return "Clocked In";
+}
+
+function getHoursWorked($username) {
+    global $db;
+    
+    $stmt = $db->prepare("SELECT clock_in FROM time_records WHERE username = ? AND clock_out IS NULL ORDER BY clock_in DESC LIMIT 1");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    
+    if (!$result) {
+        return 0;
+    }
+    
+    $clock_in = getEdtTime($result['clock_in']);
+    $now = getEdtTime();
+    return ($now->getTimestamp() - $clock_in->getTimestamp()) / 3600;
+}
+
+// Helper function to format time for display
+function formatTime($time) {
+    if (!$time) return '';
+    return getEdtTime($time)->format('h:i A');
+}
+
+// Helper function to format date for display
+function formatDate($date) {
+    if (!$date) return '';
+    return getEdtTime($date)->format('l, F j, Y');
+}
+
+function authenticateUser($username, $password) {
+    global $db;
+    $stmt = $db->prepare("SELECT username FROM employees WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    return $result !== null;
 }
 ?>
