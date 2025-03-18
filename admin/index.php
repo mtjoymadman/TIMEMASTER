@@ -253,6 +253,21 @@ foreach ($weekly_summary as $entry) {
         </div>
         
         <div class="admin-section">
+            <h2>View Employee Records</h2>
+            <form method="post" class="button-group">
+                <select name="selected_username">
+                    <option value="">Select Employee</option>
+                    <?php foreach ($employees as $emp) { ?>
+                        <option value="<?php echo htmlspecialchars($emp['username']); ?>" <?php echo $selected_username === $emp['username'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($emp['username']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <button type="submit">View/Modify Records</button>
+            </form>
+        </div>
+        
+        <div class="admin-section">
             <h2>Add Employee</h2>
             <form method="post" class="button-group">
                 <input type="text" name="username" placeholder="Username" required>
@@ -266,21 +281,6 @@ foreach ($weekly_summary as $entry) {
                     <label><input type="checkbox" name="roles[]" value="office"> Office</label>
                 </div>
                 <button type="submit" name="add">Add</button>
-            </form>
-        </div>
-
-        <div class="admin-section">
-            <h2>View Employee Records</h2>
-            <form method="post" class="button-group">
-                <select name="selected_username">
-                    <option value="">Select Employee</option>
-                    <?php foreach ($employees as $emp) { ?>
-                        <option value="<?php echo htmlspecialchars($emp['username']); ?>" <?php echo $selected_username === $emp['username'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($emp['username']); ?>
-                        </option>
-                    <?php } ?>
-                </select>
-                <button type="submit">View/Modify Records</button>
             </form>
         </div>
         
