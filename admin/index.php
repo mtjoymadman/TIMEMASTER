@@ -267,23 +267,6 @@ foreach ($weekly_summary as $entry) {
             </form>
         </div>
         
-        <div class="admin-section">
-            <h2>Add Employee</h2>
-            <form method="post" class="button-group">
-                <input type="text" name="username" placeholder="Username" required>
-                <label><input type="checkbox" name="flag_auto_break" value="1"> Flagged</label>
-                <div>
-                    <label><input type="checkbox" name="roles[]" value="employee" checked disabled> Employee (required)</label>
-                    <label><input type="checkbox" name="roles[]" value="admin" <?php echo hasRole($logged_in_user, 'admin') ? '' : 'disabled'; ?>> Admin</label>
-                    <label><input type="checkbox" name="roles[]" value="baby admin"> Baby Admin</label>
-                    <label><input type="checkbox" name="roles[]" value="driver"> Driver</label>
-                    <label><input type="checkbox" name="roles[]" value="yardman"> Yardman</label>
-                    <label><input type="checkbox" name="roles[]" value="office"> Office</label>
-                </div>
-                <button type="submit" name="add">Add</button>
-            </form>
-        </div>
-        
         <div class="time-records-section">
             <h2>Time Records</h2>
             <form method="post" class="search-form">
@@ -437,6 +420,23 @@ foreach ($weekly_summary as $entry) {
                     <button type="submit" name="modify">Save Changes</button>
                 </form>
             </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>Add Employee</h2>
+            <form method="post" class="button-group">
+                <input type="text" name="username" placeholder="Username" required>
+                <label><input type="checkbox" name="flag_auto_break" value="1"> Flagged</label>
+                <div>
+                    <label><input type="checkbox" name="roles[]" value="employee" checked disabled> Employee (required)</label>
+                    <label><input type="checkbox" name="roles[]" value="admin" <?php echo hasRole($logged_in_user, 'admin') ? '' : 'disabled'; ?>> Admin</label>
+                    <label><input type="checkbox" name="roles[]" value="baby admin"> Baby Admin</label>
+                    <label><input type="checkbox" name="roles[]" value="driver"> Driver</label>
+                    <label><input type="checkbox" name="roles[]" value="yardman"> Yardman</label>
+                    <label><input type="checkbox" name="roles[]" value="office"> Office</label>
+                </div>
+                <button type="submit" name="add">Add</button>
+            </form>
         </div>
 
         <div class="admin-section">
