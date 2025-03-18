@@ -321,62 +321,6 @@ foreach ($weekly_summary as $entry) {
             <?php } ?>
         </div>
 
-        <!-- Edit Time Record Modal -->
-        <div id="editTimeRecordModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeEditTimeRecordModal()">&times;</span>
-                <h2>Edit Time Record</h2>
-                <form method="post" class="edit-time-form">
-                    <input type="hidden" name="action" value="save_record">
-                    <input type="hidden" name="record_id" id="edit_record_id">
-                    <div class="form-group">
-                        <label for="edit_clock_in">Clock In:</label>
-                        <input type="datetime-local" id="edit_clock_in" name="clock_in" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_clock_out">Clock Out:</label>
-                        <input type="datetime-local" id="edit_clock_out" name="clock_out" required>
-                    </div>
-                    <div id="breaks-container">
-                        <!-- Breaks will be added here dynamically -->
-                    </div>
-                    <button type="button" onclick="addBreak()" class="blue-button">Add Break</button>
-                    <button type="submit" class="green-button">Save Changes</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="admin-section">
-            <h2>Add Holiday Pay</h2>
-            <form method="post" class="button-group">
-                <select name="holiday_username">
-                    <option value="">Select Employee</option>
-                    <?php foreach ($employees as $emp) { ?>
-                        <option value="<?php echo htmlspecialchars($emp['username']); ?>"><?php echo htmlspecialchars($emp['username']); ?></option>
-                    <?php } ?>
-                </select>
-                <input type="date" name="holiday_date" required>
-                <button type="submit" name="add_holiday">Add 8 Hours Holiday Pay</button>
-            </form>
-        </div>
-
-        <div class="admin-section">
-            <h2>Add Employee</h2>
-            <form method="post" class="button-group">
-                <input type="text" name="username" placeholder="Username" required>
-                <label><input type="checkbox" name="flag_auto_break" value="1"> Flagged</label>
-                <div>
-                    <label><input type="checkbox" name="roles[]" value="employee" checked disabled> Employee (required)</label>
-                    <label><input type="checkbox" name="roles[]" value="admin" <?php echo hasRole($logged_in_user, 'admin') ? '' : 'disabled'; ?>> Admin</label>
-                    <label><input type="checkbox" name="roles[]" value="baby admin"> Baby Admin</label>
-                    <label><input type="checkbox" name="roles[]" value="driver"> Driver</label>
-                    <label><input type="checkbox" name="roles[]" value="yardman"> Yardman</label>
-                    <label><input type="checkbox" name="roles[]" value="office"> Office</label>
-                </div>
-                <button type="submit" name="add">Add</button>
-            </form>
-        </div>
-
         <div class="admin-section">
             <h2>Manage Employees</h2>
             <table>
