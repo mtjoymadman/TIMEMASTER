@@ -173,86 +173,6 @@ foreach ($weekly_summary as $entry) {
         <?php } ?>
         
         <div class="admin-section">
-            <h2>Clock Management</h2>
-            <form method="post" class="button-group">
-                <select name="admin_employee" required>
-                    <option value="">Select Employee</option>
-                    <?php foreach ($employees as $emp) { ?>
-                        <option value="<?php echo htmlspecialchars($emp['username']); ?>" <?php echo $admin_employee === $emp['username'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($emp['username']); ?>
-                        </option>
-                    <?php } ?>
-                </select>
-                <button type="submit" name="admin_action" value="clock_in">Clock In</button>
-                <button type="submit" name="admin_action" value="clock_out">Clock Out</button>
-                <button type="submit" name="admin_action" value="break_in">Start Break</button>
-                <button type="submit" name="admin_action" value="break_out">End Break</button>
-            </form>
-            <?php if (hasRole($logged_in_user, 'admin')) { ?>
-                <form method="post" class="button-group" style="margin-top: 10px;">
-                    <button type="submit" name="clock_out_all" class="clock-out-all-btn">Clock Out All Employees</button>
-                </form>
-            <?php } ?>
-        </div>
-        
-        <div class="admin-section">
-            <h2>Employees Currently Clocked In</h2>
-            <table>
-                <tr><th>Username</th><th>Status</th><th>Duration</th></tr>
-                <?php foreach ($on_clock as $emp) { 
-                    // Get current time record
-                    $stmt = $db->prepare("SELECT id, clock_in FROM time_records WHERE username = ? AND clock_out IS NULL");
-                    $stmt->bind_param("s", $emp);
-                    $stmt->execute();
-                    $time_result = $stmt->get_result()->fetch_assoc();
-                    
-                    if ($time_result) {
-                        // Get current break if any
-                        $stmt = $db->prepare("SELECT break_in FROM breaks WHERE time_record_id = ? AND break_out IS NULL");
-                        $stmt->bind_param("i", $time_result['id']);
-                        $stmt->execute();
-                        $break_result = $stmt->get_result()->fetch_assoc();
-                        
-                        if ($break_result) {
-                            // Employee is on break
-                            $status_class = 'status-break';
-                            $status_text = 'On Break';
-                            $break_duration = time() - strtotime($break_result['break_in']);
-                            $minutes = floor($break_duration / 60);
-                            $duration = $minutes . ' min';
-                        } else {
-                            // Employee is clocked in
-                            $status_class = 'status-active';
-                            $status_text = 'Clocked In';
-                            $shift_duration = time() - strtotime($time_result['clock_in']);
-                            $hours = floor($shift_duration / 3600);
-                            $minutes = floor(($shift_duration % 3600) / 60);
-                            $duration = $hours . 'h ' . $minutes . 'm';
-                        }
-                    } else {
-                        // Employee is not clocked in
-                        $status_class = 'status-inactive';
-                        $status_text = 'Not Clocked In';
-                        $duration = '';
-                    }
-                ?>
-                    <tr>
-                        <td>
-                            <form method="post" class="button-group">
-                                <input type="hidden" name="selected_employee" value="<?php echo htmlspecialchars($emp); ?>">
-                                <a href="#" onclick="this.closest('form').submit(); return false;" class="employee-link <?php echo $status_class; ?>">
-                                    <strong><?php echo htmlspecialchars($emp); ?></strong>
-                                </a>
-                            </form>
-                        </td>
-                        <td><?php echo $status_text; ?></td>
-                        <td><?php echo $duration; ?></td>
-                    </tr>
-                <?php } ?>
-            </table>
-        </div>
-        
-        <div class="admin-section">
             <h2>View Employee Records</h2>
             <form method="post" class="button-group">
                 <select name="selected_username">
@@ -344,6 +264,86 @@ foreach ($weekly_summary as $entry) {
                     <button type="submit" class="green-button">Save Changes</button>
                 </form>
             </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>Clock Management</h2>
+            <form method="post" class="button-group">
+                <select name="admin_employee" required>
+                    <option value="">Select Employee</option>
+                    <?php foreach ($employees as $emp) { ?>
+                        <option value="<?php echo htmlspecialchars($emp['username']); ?>" <?php echo $admin_employee === $emp['username'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($emp['username']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <button type="submit" name="admin_action" value="clock_in">Clock In</button>
+                <button type="submit" name="admin_action" value="clock_out">Clock Out</button>
+                <button type="submit" name="admin_action" value="break_in">Start Break</button>
+                <button type="submit" name="admin_action" value="break_out">End Break</button>
+            </form>
+            <?php if (hasRole($logged_in_user, 'admin')) { ?>
+                <form method="post" class="button-group" style="margin-top: 10px;">
+                    <button type="submit" name="clock_out_all" class="clock-out-all-btn">Clock Out All Employees</button>
+                </form>
+            <?php } ?>
+        </div>
+        
+        <div class="admin-section">
+            <h2>Employees Currently Clocked In</h2>
+            <table>
+                <tr><th>Username</th><th>Status</th><th>Duration</th></tr>
+                <?php foreach ($on_clock as $emp) { 
+                    // Get current time record
+                    $stmt = $db->prepare("SELECT id, clock_in FROM time_records WHERE username = ? AND clock_out IS NULL");
+                    $stmt->bind_param("s", $emp);
+                    $stmt->execute();
+                    $time_result = $stmt->get_result()->fetch_assoc();
+                    
+                    if ($time_result) {
+                        // Get current break if any
+                        $stmt = $db->prepare("SELECT break_in FROM breaks WHERE time_record_id = ? AND break_out IS NULL");
+                        $stmt->bind_param("i", $time_result['id']);
+                        $stmt->execute();
+                        $break_result = $stmt->get_result()->fetch_assoc();
+                        
+                        if ($break_result) {
+                            // Employee is on break
+                            $status_class = 'status-break';
+                            $status_text = 'On Break';
+                            $break_duration = time() - strtotime($break_result['break_in']);
+                            $minutes = floor($break_duration / 60);
+                            $duration = $minutes . ' min';
+                        } else {
+                            // Employee is clocked in
+                            $status_class = 'status-active';
+                            $status_text = 'Clocked In';
+                            $shift_duration = time() - strtotime($time_result['clock_in']);
+                            $hours = floor($shift_duration / 3600);
+                            $minutes = floor(($shift_duration % 3600) / 60);
+                            $duration = $hours . 'h ' . $minutes . 'm';
+                        }
+                    } else {
+                        // Employee is not clocked in
+                        $status_class = 'status-inactive';
+                        $status_text = 'Not Clocked In';
+                        $duration = '';
+                    }
+                ?>
+                    <tr>
+                        <td>
+                            <form method="post" class="button-group">
+                                <input type="hidden" name="selected_employee" value="<?php echo htmlspecialchars($emp); ?>">
+                                <a href="#" onclick="this.closest('form').submit(); return false;" class="employee-link <?php echo $status_class; ?>">
+                                    <strong><?php echo htmlspecialchars($emp); ?></strong>
+                                </a>
+                            </form>
+                        </td>
+                        <td><?php echo $status_text; ?></td>
+                        <td><?php echo $duration; ?></td>
+                    </tr>
+                <?php } ?>
+            </table>
         </div>
 
         <div class="admin-section">
