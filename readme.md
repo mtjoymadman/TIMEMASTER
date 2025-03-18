@@ -119,18 +119,22 @@ Edit `config.php` to set up:
 ```
 /
 ├── admin/
-│   ├── index.php
-│   └── report.php
+│   ├── index.php (Admin dashboard and employee management)
+│   └── report.php (Reporting interface)
 ├── css/
-│   └── styles.css
-├── images/
-│   └── logo.png
+│   └── styles.css (Main stylesheet)
+├── js/
+│   └── script.js (JavaScript functions)
 ├── python/
-│   └── send_notification.py
-├── config.php
-├── functions.php
-├── index.php
-└── login.php
+│   ├── send_notification.py (Email notification system)
+│   └── email_report.py (Report generation and emailing)
+├── config.php (Database and system configuration)
+├── functions.php (Core PHP functions)
+├── index.php (Main application interface)
+├── login.php (Authentication system)
+├── schema.sql (Database structure)
+├── .htaccess (Apache configuration)
+└── .gitignore (Git ignore rules)
 ```
 
 ## Recent Changes
@@ -143,6 +147,10 @@ Edit `config.php` to set up:
 - Added weekly summary functionality
 - Enhanced employee management interface
 - Added holiday pay feature
+- Added email report generation system
+- Implemented real-time duration tracking
+- Added external time records integration
+- Enhanced admin interface with improved record management
 
 ## Security Notes
 
