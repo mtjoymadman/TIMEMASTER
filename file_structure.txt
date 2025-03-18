@@ -1,0 +1,14 @@
+├── admin/                  # Admin interface files
+│   ├── index.php          # Admin dashboard
+│   └── report.php         # Admin reporting page
+├── css/
+│   └── styles.css         # Dark theme styling
+├── js/
+│   └── script.js          # Client-side JavaScript
+├── python/
+│   └── email_report.py    # Python script for email reporting
+├── index.php              # Employee interface
+├── config.php             # Database and SMTP configuration
+├── functions.php          # Shared PHP functions
+├── README.md              # Documentation
+└── schema.sql             # MySQL schema

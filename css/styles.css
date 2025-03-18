@@ -1,0 +1,270 @@
+/* Reset default margins and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling with dark theme and crisp text */
+body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased; /* Crisp text on Webkit browsers */
+    -moz-osx-font-smoothing: grayscale; /* Crisp text on Firefox macOS */
+    text-rendering: optimizeLegibility; /* Optimize text sharpness */
+}
+
+/* Container styling with 3D shadow */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 3px solid #c0c0c0;
+    border-radius: 5px;
+    background-color: #2a2a2a; /* Slight contrast for depth */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), /* Deep outer shadow */
+                0 3px 6px rgba(0, 0, 0, 0.3), /* Mid-layer shadow */
+                0 1px 3px rgba(0, 0, 0, 0.2); /* Inner shadow for 3D lift */
+}
+
+/* Employee page specific container */
+.employee-page {
+    text-align: center;
+}
+
+/* Header styling with 3D shadow */
+header {
+    text-align: center;
+    padding: 10px 0;
+    border-bottom: 3px solid #c0c0c0;
+    background-color: #2a2a2a;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.3),
+                0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Logo styling with 3D shadow */
+.logo {
+    width: 80px;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.3),
+                0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Headings with crisp text */
+h1, h2 {
+    margin-bottom: 20px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); /* Subtle shadow for text depth */
+}
+
+/* Button group styling */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Input and button styling with 3D shadow */
+input[type="text"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input[type="email"],
+select,
+button {
+    padding: 10px;
+    font-size: 16px;
+    border: 3px solid #c0c0c0;
+    border-radius: 5px;
+    background-color: #333333; /* Darker base for contrast */
+    color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5), /* Outer shadow */
+                0 2px 4px rgba(0, 0, 0, 0.3), /* Mid shadow */
+                inset 0 1px 2px rgba(255, 255, 255, 0.1); /* Inner highlight for 3D */
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+/* Button specific styling */
+button {
+    background-color: #ff4444;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #cc3333;
+    transform: translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+button:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+    box-shadow: none; /* No shadow when disabled */
+}
+
+/* Green button styling for status indication */
+.green-button {
+    background-color: #00cc00; /* Bright green */
+    color: #ffffff; /* White text */
+    border: 3px solid #c0c0c0; /* Match other buttons */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5), /* Outer shadow */
+                0 2px 4px rgba(0, 0, 0, 0.3), /* Mid shadow */
+                inset 0 1px 2px rgba(255, 255, 255, 0.1); /* Inner highlight */
+    font-weight: bold; /* Bold text */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Text drop shadow */
+}
+
+.green-button:hover {
+    background-color: #00aa00; /* Slightly darker green on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Table styling with 3D shadow */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border: 3px solid #c0c0c0;
+    background-color: #2a2a2a;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.3),
+                0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #c0c0c0;
+}
+
+th {
+    background-color: #3a3a3a; /* Slightly lighter for contrast */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+td {
+    background-color: #2a2a2a;
+}
+
+/* Specific styling for date and number inputs */
+.date-input {
+    width: 70px;
+}
+
+.number-input {
+    width: 60px;
+}
+
+/* Home button styling with 3D shadow */
+.home-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ff4444;
+    color: #ffffff;
+    text-decoration: none;
+    border: 3px solid #c0c0c0;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5),
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.home-btn:hover {
+    background-color: #cc3333;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    body {
+        font-size: 20px;
+    }
+
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .logo {
+        width: 100px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    input[type="number"],
+    input[type="email"],
+    select,
+    button {
+        width: 100%;
+        padding: 20px;
+        font-size: 20px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .date-input,
+    .number-input {
+        width: 100%;
+    }
+}
+
+/* Print styling */
+@media print {
+    body {
+        background-color: #ffffff;
+        color: #000000;
+        -webkit-font-smoothing: auto; /* Reset for print */
+        -moz-osx-font-smoothing: auto;
+        text-rendering: auto;
+    }
+
+    .container, header, table {
+        border: 1px solid #000000;
+        box-shadow: none;
+        background-color: #ffffff;
+    }
+
+    button, .button-group, .home-btn {
+        display: none;
+    }
+
+    th, td {
+        border: 1px solid #000000;
+    }
+
+    th {
+        background-color: #ddd;
+    }
+
+    td {
+        background-color: #fff;
+    }
+}
