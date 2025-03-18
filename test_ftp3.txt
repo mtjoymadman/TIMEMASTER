@@ -1,0 +1,2 @@
+This is test file #3 to verify FTP upload functionality.
+Created at: %date% %time% 
