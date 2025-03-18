@@ -151,6 +151,8 @@ Edit `config.php` to set up:
 - Implemented real-time duration tracking
 - Added external time records integration
 - Enhanced admin interface with improved record management
+- Added automatic FTP upload system for seamless deployment
+- Updated file structure and documentation
 
 ## Security Notes
 
