@@ -2,43 +2,64 @@
 
 A time tracking system for Red Lion Salvage employees.
 
-## Features
-## addstuff
-- **Simple Login System**
-  - No passwords required
-  - Username-only authentication
-  - Automatic role-based redirection (admin/employee)
+## Current Status
 
-- **Employee Features**
-  - Clock in/out
-  - Start/end breaks
-  - View time records
-  - View current status and hours worked
-  - Search records by date
-  - Switch to admin mode (if authorized)
-
-- **Admin Features**
-  - Manage employees (add, modify, delete, suspend)
-  - View all employee records
-  - Clock in/out employees
-  - Manage breaks for employees
-  - Add holiday pay
-  - Generate reports
-  - Switch to employee mode
-
-- **Break Management**
-  - Manual break tracking
+### Completed Features
+- **Core Time Tracking**
+  - Clock in/out functionality
+  - Break management (start/end breaks)
+  - Real-time duration tracking
   - Auto-break system for shifts over 8 hours
-  - Break duration tracking
-  - Break notifications
+  - Break duration tracking and notifications
 
-- **Role System**
-  - Employee (default)
-  - Admin
-  - Baby Admin
-  - Driver
-  - Yardman
-  - Office
+- **Employee Interface**
+  - Clean, modern dark theme UI
+  - Current status display
+  - Hours worked tracking
+  - Time records view with search
+  - External time tracking in popup modal
+  - Role-based access control
+
+- **Admin Interface**
+  - Employee management (add, modify, delete, suspend)
+  - Time record management
+  - Holiday pay management
+  - Weekly summary view
+  - Clock out all employees feature
+  - Role management
+
+- **System Features**
+  - Automatic FTP upload on Git commits
+  - Email notifications for clock events
+  - Role-based access control
+  - Session management
+  - Input validation and security measures
+
+### Pending Tasks
+1. **UI/UX Improvements**
+   - [ ] Add loading indicators for actions
+   - [ ] Implement error message animations
+   - [ ] Add confirmation dialogs for important actions
+   - [ ] Improve mobile responsiveness
+
+2. **Functionality Enhancements**
+   - [ ] Add bulk actions in admin interface
+   - [ ] Implement time record export to CSV/Excel
+   - [ ] Add custom break duration settings
+   - [ ] Implement shift templates
+   - [ ] Add overtime tracking and alerts
+
+3. **Reporting Features**
+   - [ ] Enhanced weekly/monthly reports
+   - [ ] Custom report builder
+   - [ ] Export reports to multiple formats
+   - [ ] Automated report scheduling
+
+4. **System Improvements**
+   - [ ] Add database backup functionality
+   - [ ] Implement system health monitoring
+   - [ ] Add audit logging for admin actions
+   - [ ] Improve error handling and recovery
 
 ## Database Schema
 
@@ -114,15 +135,14 @@ Edit `config.php` to set up:
 
 ## Recent Changes
 
-- Added support for admins to clock in/out in employee mode
-- Improved role checking for time-related functions
-- Added external time records functionality
-- Enhanced error handling and logging
+- Added automatic FTP upload on Git commits
+- Implemented external time tracking in popup modal
+- Added "Clock Out All" feature for admins
+- Enhanced break management system
 - Improved UI with centered buttons and consistent styling
 - Added weekly summary functionality
-- Enhanced break management system
+- Enhanced employee management interface
 - Added holiday pay feature
-- Improved employee management interface
 
 ## Security Notes
 
