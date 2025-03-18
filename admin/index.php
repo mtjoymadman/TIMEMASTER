@@ -31,6 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: ../index.php");
             exit;
         }
+        if (isset($_POST['clock_out_all']) && hasRole($logged_in_user, 'admin')) {
+            $count = clockOutAllEmployees($logged_in_user);
+            if ($count !== false) {
+                $success = "Successfully clocked out $count employees.";
+            } else {
+                $error = "Failed to clock out employees.";
+            }
+        }
         if (isset($_POST['add']) && canManageEmployees($logged_in_user)) {
             $roles = isset($_POST['roles']) ? $_POST['roles'] : ['employee'];
             if (addEmployee($_POST['username'], $_POST['flag_auto_break'] ?? 0, $roles)) {
@@ -180,6 +188,11 @@ foreach ($weekly_summary as $entry) {
                 <button type="submit" name="admin_action" value="break_in">Start Break</button>
                 <button type="submit" name="admin_action" value="break_out">End Break</button>
             </form>
+            <?php if (hasRole($logged_in_user, 'admin')) { ?>
+                <form method="post" class="button-group" style="margin-top: 10px;">
+                    <button type="submit" name="clock_out_all" class="clock-out-all-btn">Clock Out All Employees</button>
+                </form>
+            <?php } ?>
         </div>
         
         <div class="admin-section">
@@ -333,76 +346,98 @@ foreach ($weekly_summary as $entry) {
             </form>
         </div>
         
-        <?php if ($selected_records) { ?>
-            <div class="admin-section">
-                <h2>Time Records for <?php echo htmlspecialchars($selected_username); ?></h2>
+        <div class="time-records-section">
+            <h2>Time Records</h2>
+            <form method="post" class="search-form">
+                <input type="date" name="date">
+                <button type="submit">Search Records</button>
+            </form>
+            <?php if ($selected_records) { ?>
                 <table>
                     <tr>
-                        <th>Date</th>
+                        <th>Day</th>
                         <th>Clock In</th>
                         <th>Clock Out</th>
-                        <th>Total Break (min)</th>
+                        <th>Duration</th>
+                        <th>Break (min)</th>
+                        <th>Reason</th>
                         <th>Actions</th>
                     </tr>
-                    <?php foreach ($selected_records as $record) { ?>
+                    <?php 
+                    $current_id = null;
+                    foreach ($selected_records as $record) { 
+                        if ($current_id !== $record['id']) { 
+                            $current_id = $record['id'];
+                            // Calculate total break minutes for this record
+                            $total_break_minutes = array_sum(array_map(function($r) {
+                                return $r['break_time'] ?? 0;
+                            }, array_filter($selected_records, fn($r) => $r['id'] === $current_id)));
+                            
+                            // Calculate duration
+                            $duration = strtotime($record['clock_out']) - strtotime($record['clock_in']);
+                            $hours = floor($duration / 3600);
+                            $minutes = floor(($duration % 3600) / 60);
+                            $duration_str = $hours . 'h ' . $minutes . 'm';
+                    ?>
                         <tr>
-                            <td><?php echo date('l, F j, Y', strtotime($record['clock_in'])); ?></td>
-                            <td><?php echo date('h:i A', strtotime($record['clock_in'])); ?></td>
-                            <td><?php echo $record['clock_out'] ? date('h:i A', strtotime($record['clock_out'])) : 'Not Clocked Out'; ?></td>
-                            <td><?php echo $record['total_break_minutes'] ?? 0; ?></td>
+                            <td><?php echo formatDate($record['clock_in']); ?></td>
+                            <td><?php echo formatTime($record['clock_in']); ?></td>
+                            <td><?php echo formatTime($record['clock_out']); ?></td>
+                            <td><?php echo $duration_str; ?></td>
+                            <td><?php echo $total_break_minutes > 0 ? $total_break_minutes : '-'; ?></td>
+                            <td><?php echo isset($record['is_external']) ? htmlspecialchars($record['reason']) : '-'; ?></td>
                             <td>
-                                <?php if (hasRole($logged_in_user, 'admin')) { ?>
-                                    <form method="post" style="display: inline;">
-                                        <input type="hidden" name="id" value="<?php echo $record['id']; ?>">
-                                        <button type="submit" name="edit_record">Edit</button>
-                                    </form>
-                                <?php } ?>
+                                <button class="edit-btn" onclick="openEditTimeRecordModal(
+                                    <?php echo $record['id']; ?>,
+                                    '<?php echo date('Y-m-d\TH:i', strtotime($record['clock_in'])); ?>',
+                                    '<?php echo $record['clock_out'] ? date('Y-m-d\TH:i', strtotime($record['clock_out'])) : ''; ?>',
+                                    <?php echo json_encode(array_filter($selected_records, fn($r) => $r['id'] === $record['id'] && isset($r['break_in']))); ?>
+                                )">Edit</button>
                             </td>
                         </tr>
-                    <?php } ?>
+                    <?php } } ?>
                 </table>
-            </div>
-        <?php } ?>
+            <?php } ?>
+        </div>
 
-        <?php if ($weekly_records) { ?>
-            <div class="admin-section">
-                <h2>Weekly Records for <?php echo htmlspecialchars($selected_employee); ?></h2>
-                <table>
-                    <tr>
-                        <th>Date</th>
-                        <th>Clock In</th>
-                        <th>Clock Out</th>
-                        <th>Total Break (min)</th>
-                        <th>Hours Worked</th>
-                    </tr>
-                    <?php foreach ($weekly_records as $record) { ?>
-                        <tr>
-                            <td><?php echo date('l, F j, Y', strtotime($record['clock_in'])); ?></td>
-                            <td><?php echo date('h:i A', strtotime($record['clock_in'])); ?></td>
-                            <td><?php echo $record['clock_out'] ? date('h:i A', strtotime($record['clock_out'])) : 'Not Clocked Out'; ?></td>
-                            <td><?php echo $record['total_break_minutes'] ?? 0; ?></td>
-                            <td><?php echo number_format($record['hours_worked'], 2); ?></td>
-                        </tr>
-                    <?php } ?>
-                </table>
-            </div>
-        <?php } ?>
-
-        <?php if (hasRole($logged_in_user, 'admin')) { ?>
-            <div class="admin-section">
-                <h2>Add Holiday Pay</h2>
-                <form method="post" class="button-group">
-                    <select name="holiday_username">
-                        <option value="">Select Employee</option>
-                        <?php foreach ($employees as $emp) { ?>
-                            <option value="<?php echo htmlspecialchars($emp['username']); ?>"><?php echo htmlspecialchars($emp['username']); ?></option>
-                        <?php } ?>
-                    </select>
-                    <input type="date" name="holiday_date" required>
-                    <button type="submit" name="add_holiday">Add 8 Hours Holiday Pay</button>
+        <!-- Edit Time Record Modal -->
+        <div id="editTimeRecordModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeEditTimeRecordModal()">&times;</span>
+                <h2>Edit Time Record</h2>
+                <form method="post" class="edit-time-form">
+                    <input type="hidden" name="action" value="save_record">
+                    <input type="hidden" name="record_id" id="edit_record_id">
+                    <div class="form-group">
+                        <label for="edit_clock_in">Clock In:</label>
+                        <input type="datetime-local" id="edit_clock_in" name="clock_in" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_clock_out">Clock Out:</label>
+                        <input type="datetime-local" id="edit_clock_out" name="clock_out" required>
+                    </div>
+                    <div id="breaks-container">
+                        <!-- Breaks will be added here dynamically -->
+                    </div>
+                    <button type="button" onclick="addBreak()" class="blue-button">Add Break</button>
+                    <button type="submit" class="green-button">Save Changes</button>
                 </form>
             </div>
-        <?php } ?>
+        </div>
+
+        <div class="admin-section">
+            <h2>Add Holiday Pay</h2>
+            <form method="post" class="button-group">
+                <select name="holiday_username">
+                    <option value="">Select Employee</option>
+                    <?php foreach ($employees as $emp) { ?>
+                        <option value="<?php echo htmlspecialchars($emp['username']); ?>"><?php echo htmlspecialchars($emp['username']); ?></option>
+                    <?php } ?>
+                </select>
+                <input type="date" name="holiday_date" required>
+                <button type="submit" name="add_holiday">Add 8 Hours Holiday Pay</button>
+            </form>
+        </div>
 
         <div class="admin-section">
             <form method="post" class="button-group">
@@ -445,6 +480,61 @@ foreach ($weekly_summary as $entry) {
         }
 
         window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function openEditTimeRecordModal(recordId, clockIn, clockOut, breaks) {
+            document.getElementById('edit_record_id').value = recordId;
+            document.getElementById('edit_clock_in').value = clockIn;
+            document.getElementById('edit_clock_out').value = clockOut;
+            
+            const breaksContainer = document.getElementById('breaks-container');
+            breaksContainer.innerHTML = '';
+            
+            if (breaks && breaks.length > 0) {
+                breaks.forEach((break_, index) => {
+                    addBreak(break_.break_in, break_.break_out, break_.break_time, index);
+                });
+            }
+            
+            document.getElementById('editTimeRecordModal').style.display = 'block';
+        }
+
+        function closeEditTimeRecordModal() {
+            document.getElementById('editTimeRecordModal').style.display = 'none';
+        }
+
+        function addBreak(breakIn = '', breakOut = '', breakTime = 0, index = null) {
+            const breaksContainer = document.getElementById('breaks-container');
+            const breakIndex = index !== null ? index : breaksContainer.children.length;
+            
+            const breakDiv = document.createElement('div');
+            breakDiv.className = 'break-entry';
+            breakDiv.innerHTML = `
+                <h3>Break ${breakIndex + 1}</h3>
+                <div class="form-group">
+                    <label>Break In:</label>
+                    <input type="datetime-local" name="breaks[${breakIndex}][break_in]" value="${breakIn}" required>
+                </div>
+                <div class="form-group">
+                    <label>Break Out:</label>
+                    <input type="datetime-local" name="breaks[${breakIndex}][break_out]" value="${breakOut}" required>
+                </div>
+                <div class="form-group">
+                    <label>Break Time (minutes):</label>
+                    <input type="number" name="breaks[${breakIndex}][break_time]" value="${breakTime}" required>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="red-button">Remove Break</button>
+            `;
+            
+            breaksContainer.appendChild(breakDiv);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            var modal = document.getElementById('editTimeRecordModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
             }

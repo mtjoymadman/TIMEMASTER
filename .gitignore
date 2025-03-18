@@ -3,11 +3,12 @@ config.php
 
 # Log files
 *.log
-.git/push_log.txt
 
 # IDE files
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
 
 # OS files
 .DS_Store
@@ -15,4 +16,5 @@ Thumbs.db
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+*.bak 

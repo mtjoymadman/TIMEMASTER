@@ -110,17 +110,63 @@ function getShiftDuration($username) {
 
 function getTimeRecords($username, $date = null) {
     global $db;
-    $query = "SELECT t.*, b.id AS break_id, b.break_in, b.break_out, b.break_time 
-              FROM time_records t 
-              LEFT JOIN breaks b ON t.id = b.time_record_id 
-              WHERE t.username = ?";
+    $records = [];
+    
+    // Get regular time records
+    $query = "SELECT * FROM time_records WHERE username = ?";
     if ($date) {
-        $query .= " AND DATE(t.clock_in) = '$date'";
+        $query .= " AND DATE(clock_in) = ?";
     }
+    $query .= " ORDER BY clock_in DESC";
+    
     $stmt = $db->prepare($query);
-    $stmt->bind_param("s", $username);
+    if ($date) {
+        $stmt->bind_param("ss", $username, $date);
+    } else {
+        $stmt->bind_param("s", $username);
+    }
     $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $records[] = $row;
+    }
+    
+    // Get external time records
+    $query = "SELECT * FROM external_time_records WHERE username = ?";
+    if ($date) {
+        $query .= " AND DATE(start_time) = ?";
+    }
+    $query .= " ORDER BY start_time DESC";
+    
+    $stmt = $db->prepare($query);
+    if ($date) {
+        $stmt->bind_param("ss", $username, $date);
+    } else {
+        $stmt->bind_param("s", $username);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        // Convert external time record to match time_records format
+        $records[] = [
+            'id' => 'ext_' . $row['id'],
+            'username' => $row['username'],
+            'clock_in' => $row['start_time'],
+            'clock_out' => $row['end_time'],
+            'break_time' => 0,
+            'reason' => $row['reason'],
+            'is_external' => true
+        ];
+    }
+    
+    // Sort all records by clock_in time
+    usort($records, function($a, $b) {
+        return strtotime($b['clock_in']) - strtotime($a['clock_in']);
+    });
+    
+    return $records;
 }
 
 function addEmployee($username, $flag_auto_break = 0, $roles = ['employee'], $suspended = 0) {
@@ -455,8 +501,7 @@ function formatTime($time) {
 
 // Helper function to format date for display
 function formatDate($date) {
-    if (!$date) return '';
-    return getEdtTime($date)->format('l, F j, Y');
+    return date('D m/d/Y', strtotime($date));
 }
 
 function authenticateUser($username, $password) {
@@ -467,4 +512,41 @@ function authenticateUser($username, $password) {
     $result = $stmt->get_result()->fetch_assoc();
     return $result !== null;
 }
+
+function clockOutAllEmployees($admin_username) {
+    global $db;
+    if (!hasRole($admin_username, 'admin')) return false;
+    
+    // Get all active time records
+    $stmt = $db->prepare("SELECT id, username FROM time_records WHERE clock_out IS NULL");
+    $stmt->execute();
+    $active_records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+    $now = getEdtTime()->format('Y-m-d H:i:s');
+    $clocked_out_count = 0;
+    
+    // Begin transaction
+    $db->begin_transaction();
+    
+    try {
+        // Update all active time records
+        $stmt = $db->prepare("UPDATE time_records SET clock_out = ? WHERE clock_out IS NULL");
+        $stmt->bind_param("s", $now);
+        $stmt->execute();
+        $clocked_out_count = $stmt->affected_rows;
+        
+        // Log the action
+        foreach ($active_records as $record) {
+            sendNotification($record['username'], "clocked out by admin");
+        }
+        
+        $db->commit();
+        return $clocked_out_count;
+    } catch (Exception $e) {
+        $db->rollback();
+        error_log("Error clocking out all employees: " . $e->getMessage());
+        return false;
+    }
+}
+
 ?>
