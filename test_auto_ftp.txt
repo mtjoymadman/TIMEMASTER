@@ -1,0 +1,2 @@
+This is a test file to verify automatic FTP upload after Git commits.
+Created at: %date% %time% 
