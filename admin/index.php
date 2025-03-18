@@ -1,4 +1,5 @@
 <?php
+// Test comment for automatic deployment - <?php echo date('Y-m-d H:i:s'); ?>
 session_start();
 date_default_timezone_set('America/New_York'); // Force EDT (UTC-4)
 require_once '../functions.php';
