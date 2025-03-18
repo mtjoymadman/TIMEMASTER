@@ -268,68 +268,6 @@ foreach ($weekly_summary as $entry) {
                 <button type="submit" name="add">Add</button>
             </form>
         </div>
-        
-        <div class="admin-section">
-            <h2>Manage Employees</h2>
-            <table>
-                <tr><th>Username</th><th>Flagged</th><th>Roles</th><th>Suspended</th><th>Actions</th></tr>
-                <?php foreach ($employees as $emp) { ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($emp['username']); ?></td>
-                        <td><?php echo $emp['flag_auto_break'] ? 'Yes' : 'No'; ?></td>
-                        <td><?php echo htmlspecialchars($emp['role']); ?></td>
-                        <td><?php echo $emp['suspended'] ? 'Yes' : 'No'; ?></td>
-                        <td>
-                            <button class="edit-btn" onclick="openEmployeeModal(<?php echo htmlspecialchars(json_encode($emp)); ?>)">Edit</button>
-                            <form method="post" style="display: inline;">
-                                <input type="hidden" name="username" value="<?php echo htmlspecialchars($emp['username']); ?>">
-                                <input type="hidden" name="action" value="suspend">
-                                <button type="submit" name="suspend" class="<?php echo $emp['suspended'] ? 'unsuspend-btn' : 'suspend-btn'; ?>">
-                                    <?php echo $emp['suspended'] ? 'Unsuspend' : 'Suspend'; ?>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php } ?>
-            </table>
-        </div>
-
-        <!-- Employee Modal -->
-        <div id="employeeModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Edit Employee</h2>
-                <form method="post">
-                    <input type="hidden" name="old_username" id="old_username">
-                    <div>
-                        <label for="new_username">Username:</label>
-                        <input type="text" id="new_username" name="new_username" required>
-                    </div>
-                    <div>
-                        <label>
-                            <input type="checkbox" id="flag_auto_break" name="flag_auto_break" value="1">
-                            Flagged for Auto Break
-                        </label>
-                    </div>
-                    <div>
-                        <label>
-                            <input type="checkbox" id="suspended" name="suspended" value="1">
-                            Suspended
-                        </label>
-                    </div>
-                    <div>
-                        <h3>Roles:</h3>
-                        <label><input type="checkbox" id="role_employee" name="roles[]" value="employee" checked disabled> Employee (required)</label>
-                        <label><input type="checkbox" id="role_admin" name="roles[]" value="admin"> Admin</label>
-                        <label><input type="checkbox" id="role_baby_admin" name="roles[]" value="baby admin"> Baby Admin</label>
-                        <label><input type="checkbox" id="role_driver" name="roles[]" value="driver"> Driver</label>
-                        <label><input type="checkbox" id="role_yardman" name="roles[]" value="yardman"> Yardman</label>
-                        <label><input type="checkbox" id="role_office" name="roles[]" value="office"> Office</label>
-                    </div>
-                    <button type="submit" name="modify">Save Changes</button>
-                </form>
-            </div>
-        </div>
 
         <div class="admin-section">
             <h2>View Employee Records</h2>
@@ -437,6 +375,68 @@ foreach ($weekly_summary as $entry) {
                 <input type="date" name="holiday_date" required>
                 <button type="submit" name="add_holiday">Add 8 Hours Holiday Pay</button>
             </form>
+        </div>
+
+        <div class="admin-section">
+            <h2>Manage Employees</h2>
+            <table>
+                <tr><th>Username</th><th>Flagged</th><th>Roles</th><th>Suspended</th><th>Actions</th></tr>
+                <?php foreach ($employees as $emp) { ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($emp['username']); ?></td>
+                        <td><?php echo $emp['flag_auto_break'] ? 'Yes' : 'No'; ?></td>
+                        <td><?php echo htmlspecialchars($emp['role']); ?></td>
+                        <td><?php echo $emp['suspended'] ? 'Yes' : 'No'; ?></td>
+                        <td>
+                            <button class="edit-btn" onclick="openEmployeeModal(<?php echo htmlspecialchars(json_encode($emp)); ?>)">Edit</button>
+                            <form method="post" style="display: inline;">
+                                <input type="hidden" name="username" value="<?php echo htmlspecialchars($emp['username']); ?>">
+                                <input type="hidden" name="action" value="suspend">
+                                <button type="submit" name="suspend" class="<?php echo $emp['suspended'] ? 'unsuspend-btn' : 'suspend-btn'; ?>">
+                                    <?php echo $emp['suspended'] ? 'Unsuspend' : 'Suspend'; ?>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </table>
+        </div>
+
+        <!-- Employee Modal -->
+        <div id="employeeModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Edit Employee</h2>
+                <form method="post">
+                    <input type="hidden" name="old_username" id="old_username">
+                    <div>
+                        <label for="new_username">Username:</label>
+                        <input type="text" id="new_username" name="new_username" required>
+                    </div>
+                    <div>
+                        <label>
+                            <input type="checkbox" id="flag_auto_break" name="flag_auto_break" value="1">
+                            Flagged for Auto Break
+                        </label>
+                    </div>
+                    <div>
+                        <label>
+                            <input type="checkbox" id="suspended" name="suspended" value="1">
+                            Suspended
+                        </label>
+                    </div>
+                    <div>
+                        <h3>Roles:</h3>
+                        <label><input type="checkbox" id="role_employee" name="roles[]" value="employee" checked disabled> Employee (required)</label>
+                        <label><input type="checkbox" id="role_admin" name="roles[]" value="admin"> Admin</label>
+                        <label><input type="checkbox" id="role_baby_admin" name="roles[]" value="baby admin"> Baby Admin</label>
+                        <label><input type="checkbox" id="role_driver" name="roles[]" value="driver"> Driver</label>
+                        <label><input type="checkbox" id="role_yardman" name="roles[]" value="yardman"> Yardman</label>
+                        <label><input type="checkbox" id="role_office" name="roles[]" value="office"> Office</label>
+                    </div>
+                    <button type="submit" name="modify">Save Changes</button>
+                </form>
+            </div>
         </div>
 
         <div class="admin-section">
