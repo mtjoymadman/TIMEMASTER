@@ -420,7 +420,7 @@ table tr:hover {
     margin-right: 10px;
 }
 
-/* Modal styles */
+/* Modal styling - Improved for better UX */
 .modal {
     display: none;
     position: fixed;
@@ -429,61 +429,238 @@ table tr:hover {
     top: 0;
     width: 100%;
     height: 100%;
+    overflow: auto;
     background-color: rgba(0, 0, 0, 0.7);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .modal-content {
-    background-color: #333;
+    position: relative;
+    background-color: #2a2a2a;
     margin: 5% auto;
     padding: 20px;
-    border-radius: 5px;
-    width: 80%;
-    max-width: 800px;
-    position: relative;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.modal-content h2 {
-    margin-bottom: 20px;
-    color: #fff;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #fff;
-}
-
-.roles-group {
+    border: 2px solid #c0392b;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 1000px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    animation: slideDown 0.4s ease;
+    max-height: 90vh;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
+    flex-direction: column;
 }
 
-.roles-group label {
-    display: inline-flex;
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Improved report modal styling */
+.report-modal {
+    width: 90%;
+    max-width: 1200px; 
+    padding: 0;
+    overflow: hidden;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin: 0;
+    padding: 15px 20px;
+    background-color: #333;
+    border-bottom: 2px solid #c0392b;
 }
 
+.report-header h2 {
+    margin: 0;
+    color: #fff;
+}
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.report-content-container {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(90vh - 70px);
+}
+
+/* Improved action buttons */
+.action-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #2980b9;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background-color: #3498db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Better close button */
 .close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
     color: #aaa;
-    float: right;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    position: absolute;
-    right: 20px;
-    top: 10px;
+    z-index: 10;
+    transition: all 0.3s ease;
 }
 
 .close:hover {
-    color: #fff;
+    color: #c0392b;
+    transform: rotate(90deg);
+}
+
+/* Loading overlay for async operations */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    color: white;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #c0392b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Improved table styling for reports */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.report-table th {
+    background-color: #c0392b;
+    color: white;
+    padding: 12px 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+}
+
+.report-table td {
+    padding: 10px;
+    border-bottom: 1px solid #444;
+}
+
+.report-table tr.regular-record {
+    background-color: #222;
+}
+
+.report-table tr.outside-record {
+    background-color: #2c3e50;
+}
+
+.report-table tr:hover {
+    background-color: #333;
+}
+
+.hours-cell {
+    font-weight: bold;
+    color: #e74c3c;
+}
+
+.reason-cell {
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.record-type {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.regular-type {
+    background-color: #27ae60;
+    color: white;
+}
+
+.outside-type {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* Print styles for reports */
+@media print {
+    .report-modal {
+        width: 100%;
+        border: none;
+        box-shadow: none;
+    }
+    
+    .report-header, .report-actions, .close {
+        display: none;
+    }
+    
+    .report-content-container {
+        padding: 0;
+        overflow: visible;
+        height: auto;
+    }
+    
+    .report-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    
+    .report-table th {
+        background-color: #ddd !important;
+        color: black !important;
+    }
+    
+    .report-table tr.regular-record,
+    .report-table tr.outside-record {
+        background-color: transparent !important;
+    }
 }
 
 /* Employee link styles */
@@ -719,4 +896,309 @@ td:nth-child(3) {
 
 .edit-btn:hover {
     background-color: #0056b3;
+}
+
+/* Report Section Styles */
+.report-form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.report-form .form-group {
+    margin-bottom: 20px;
+}
+
+.report-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.report-form select[multiple] {
+    height: 150px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.report-form .checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.report-form .checkbox-group label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+}
+
+.report-form .checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Report Modal Styles */
+.report-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.report-actions {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.report-actions .action-btn {
+    padding: 8px 16px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.report-actions .action-btn:hover {
+    background: #0056b3;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.report-table th,
+.report-table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.report-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+.report-table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.report-table tr:hover {
+    background: #f2f2f2;
+}
+
+.employee-section {
+    margin-bottom: 30px;
+}
+
+.employee-section h2 {
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #007bff;
+}
+
+/* Print Styles */
+@media print {
+    .report-content {
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .report-actions {
+        display: none;
+    }
+
+    .report-table {
+        page-break-inside: auto;
+    }
+
+    .employee-section {
+        page-break-inside: avoid;
+    }
+}
+
+.report-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.employee-select-container {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.select-all-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.select-all-btn:hover {
+    background: #45a049;
+}
+
+.employee-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.checkbox-label:hover {
+    background: #f5f5f5;
+}
+
+.report-modal {
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.report-table th,
+.report-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.report-table th {
+    background: #f5f5f5;
+}
+
+.employee-section {
+    margin-bottom: 30px;
+    page-break-inside: avoid;
+}
+
+@media print {
+    .report-actions {
+        display: none;
+    }
+    
+    .modal-content {
+        box-shadow: none;
+    }
+    
+    .close {
+        display: none;
+    }
+}
+
+/* Email modal styling */
+.full-width {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    margin: 5px 0;
+}
+
+.form-group small {
+    display: block;
+    color: #bbb;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.cancel-btn {
+    padding: 8px 15px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cancel-btn:hover {
+    background-color: #888;
+}
+
+/* Success and error messages */
+.success-message, .error-message {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.success-message {
+    background-color: rgba(46, 204, 113, 0.2);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+}
+
+.error-message {
+    background-color: rgba(231, 76, 60, 0.2);
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+}
+
+/* Settings form styling */
+.settings-form {
+    max-width: 800px;
+}
+
+.settings-form .form-group {
+    margin-bottom: 20px;
+}
+
+.settings-form small {
+    display: block;
+    color: #bbb;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.test-email-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #444;
 }

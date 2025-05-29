@@ -1,9 +1,31 @@
 RewriteEngine On
 RewriteBase /
+
+# Protect live_time_editor.php
+RewriteRule ^admin/live_time_editor\.php$ admin/live_time_editor.php [L]
 RewriteRule ^admin(/(.*))?$ admin/index.php [L]
+
+# If the request is not for an actual file or directory
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !\.(css|js|png|jpg|jpeg|gif|ico)$ [NC]
+
+# If not already on auto_auth.php or other essential files
+RewriteCond %{REQUEST_URI} !^/auto_auth\.php
+RewriteCond %{REQUEST_URI} !^/login\.php
+RewriteCond %{REQUEST_URI} !^/logout\.php
+RewriteCond %{REQUEST_URI} !^/config\.php
+RewriteCond %{REQUEST_URI} !^/functions\.php
+RewriteCond %{REQUEST_URI} !^/css/
+RewriteCond %{REQUEST_URI} !^/js/
+RewriteCond %{REQUEST_URI} !^/lib/
+RewriteCond %{REQUEST_URI} !^/admin/
+
+# Redirect to index.php
 RewriteRule . index.php [L]
 
-# Set PHP version (adjust based on your server)
-AddHandler application/x-httpd-php80 .php
+# Basic security
+Options -Indexes
+
+# Set default character set
+AddDefaultCharset UTF-8

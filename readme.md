@@ -1,167 +1,89 @@
-# TIMEMASTER
+# TIMEMASTER - Time Tracking System
 
-A time tracking system for Red Lion Salvage employees.
+TIMEMASTER is a comprehensive time tracking system for Red Lion Salvage employees, allowing clock in/out functionality, break management, and detailed time reporting.
 
-## Current Status
+## Important Timezone Information
 
-### Completed Features
-- **Core Time Tracking**
-  - Clock in/out functionality
-  - Break management (start/end breaks)
-  - Real-time duration tracking
-  - Auto-break system for shifts over 8 hours
-  - Break duration tracking and notifications
+**TIMEMASTER is hardcoded to use Eastern Time (America/New_York) exclusively.**
 
-- **Employee Interface**
-  - Clean, modern dark theme UI
-  - Current status display
-  - Hours worked tracking
-  - Time records view with search
-  - External time tracking in popup modal
-  - Role-based access control
+### Timezone Configuration Details:
 
-- **Admin Interface**
-  - Employee management (add, modify, delete, suspend)
-  - Time record management
-  - Holiday pay management
-  - Weekly summary view
-  - Clock out all employees feature
-  - Role management
+- All dates and times are displayed in Eastern Time (America/New_York)
+- The application enforces this timezone in every PHP file to override the server's default timezone
+- Database connections use Eastern Time settings
+- No other timezone is supported or allowed in this application
+- Server is located in a different timezone, so every PHP file must explicitly set the timezone to avoid reverting to UTC
 
-- **System Features**
-  - Automatic FTP upload on Git commits
-  - Email notifications for clock events
-  - Role-based access control
-  - Session management
-  - Input validation and security measures
+### Implementation Notes:
 
-### Pending Tasks
-1. **UI/UX Improvements**
-   - [ ] Add loading indicators for actions
-   - [ ] Implement error message animations
-   - [ ] Add confirmation dialogs for important actions
-   - [ ] Improve mobile responsiveness
+- Every PHP file includes: `date_default_timezone_set('America/New_York');`
+- Database connection uses: `SET time_zone = '-04:00';`
+- All DateTime objects use: `new DateTime($time, new DateTimeZone('America/New_York'));`
+- No timezone conversions are performed; everything stays in Eastern Time
 
-2. **Functionality Enhancements**
-   - [ ] Add bulk actions in admin interface
-   - [ ] Implement time record export to CSV/Excel
-   - [ ] Add custom break duration settings
-   - [ ] Implement shift templates
-   - [ ] Add overtime tracking and alerts
+## Features
 
-3. **Reporting Features**
-   - [ ] Enhanced weekly/monthly reports
-   - [ ] Custom report builder
-   - [ ] Export reports to multiple formats
-   - [ ] Automated report scheduling
+- Employee clock in/out
+- Break management
+- Real-time duration tracking
+- Administrative time editing
+- Reporting capabilities
+- Employee management
 
-4. **System Improvements**
-   - [ ] Add database backup functionality
-   - [ ] Implement system health monitoring
-   - [ ] Add audit logging for admin actions
-   - [ ] Improve error handling and recovery
+## Installation
 
-## Database Schema
-
-```sql
-CREATE TABLE employees (
-    username VARCHAR(50) PRIMARY KEY,
-    flag_auto_break TINYINT(1) DEFAULT 0,
-    role VARCHAR(100) DEFAULT 'employee',
-    suspended TINYINT(1) DEFAULT 0
-);
-
-CREATE TABLE time_records (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50),
-    clock_in DATETIME,
-    clock_out DATETIME,
-    FOREIGN KEY (username) REFERENCES employees(username)
-);
-
-CREATE TABLE breaks (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    time_record_id INT,
-    break_in DATETIME,
-    break_out DATETIME,
-    break_time INT DEFAULT 0,
-    FOREIGN KEY (time_record_id) REFERENCES time_records(id)
-);
-
-CREATE TABLE external_time_records (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50),
-    start_time DATETIME,
-    end_time DATETIME,
-    reason TEXT,
-    FOREIGN KEY (username) REFERENCES employees(username)
-);
-```
-
-## Setup
-
-1. Create a MySQL database
-2. Import the schema.sql file
-3. Configure database connection in config.php
-4. Set up email notifications in config.php (optional)
-5. Ensure Python is installed for notification system
-6. Set up web server (Apache/Nginx) with PHP support
+1. Upload all files to your web server
+2. Import the database schema (see database_schema.sql)
+3. Update the config.php file with your database credentials
+4. Ensure PHP timezone functions are properly configured for America/New_York
 
 ## Configuration
 
-Edit `config.php` to set up:
-- Database connection
-- Email notifications
-- Time zone settings
+Edit the config.php file to set your:
+- Database connection details
+- SMTP settings for email notifications
+- Additional application settings
 
-## File Structure
+## Security
 
-```
-/
-├── admin/
-│   ├── index.php (Admin dashboard and employee management)
-│   └── report.php (Reporting interface)
-├── css/
-│   └── styles.css (Main stylesheet)
-├── js/
-│   └── script.js (JavaScript functions)
-├── python/
-│   ├── send_notification.py (Email notification system)
-│   └── email_report.py (Report generation and emailing)
-├── config.php (Database and system configuration)
-├── functions.php (Core PHP functions)
-├── index.php (Main application interface)
-├── login.php (Authentication system)
-├── schema.sql (Database structure)
-├── .htaccess (Apache configuration)
-└── .gitignore (Git ignore rules)
-```
+Access is restricted by role-based permissions:
+- Regular employees can only manage their own time
+- Administrators can manage all employees and time records
 
-## Recent Changes
+## License
 
-- Added automatic FTP upload on Git commits
-- Implemented external time tracking in popup modal
-- Added "Clock Out All" feature for admins
-- Enhanced break management system
-- Improved UI with centered buttons and consistent styling
-- Added weekly summary functionality
-- Enhanced employee management interface
-- Added holiday pay feature
-- Added email report generation system
-- Implemented real-time duration tracking
-- Added external time records integration
-- Enhanced admin interface with improved record management
-- Added automatic FTP upload system for seamless deployment
-- Updated file structure and documentation
+Proprietary software for Red Lion Salvage. Unauthorized use is prohibited.
 
-## Security Notes
+## Development Guidelines
 
-- System uses username-only authentication (no passwords)
-- Role-based access control for sensitive functions
-- Input validation and SQL injection prevention
-- Session-based authentication
+### IMPORTANT: Read Before Making Any Changes
 
-## Support
+1. **Database Structure**
+   - The database uses specific table and column names that must not be changed
+   - Break records use the table name `break_records` 
+   - Column names are `time_record_id`, `break_in`, and `break_out`
+   - Never attempt to rename database columns or tables
 
-For support or questions, contact the system administrator.
+2. **Conservative Development Approach**
+   - This is a production system - always be conservative with changes
+   - Fix only what is broken, using the exact same coding patterns
+   - Do not introduce new approaches or patterns 
+   - Do not refactor existing code unless absolutely necessary
 
+3. **Making Changes**
+   - When fixing an issue, identify the exact error and fix only that specific problem
+   - Test changes thoroughly before deploying
+   - Do not modify multiple files unnecessarily
+   - Keep changes minimal and focused on the specific issue
+
+4. **Timezone Handling**
+   - All times must be handled in Eastern Time (America/New_York)
+   - Do not introduce any timezone conversions
+   - Every new PHP file must include: `date_default_timezone_set('America/New_York');`
+
+5. **Backward Compatibility**
+   - All changes must maintain backward compatibility with existing data
+   - Be extremely careful when modifying SQL queries
+   - Maintain existing function signatures and return values
+
+Following these guidelines will ensure the stability of the TIMEMASTER system and prevent service disruptions for the business. 
