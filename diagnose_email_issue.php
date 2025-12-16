@@ -7,13 +7,26 @@
  * IMPORTANT: This diagnostic tool is COMPLETELY STANDALONE - no config, no session, no redirects
  */
 
+// CRITICAL: Prevent any output buffering that might interfere
+if (ob_get_level() > 0) {
+    ob_end_clean();
+}
+
 // CRITICAL: Send headers FIRST to prevent any redirects
 header('Content-Type: text/html; charset=utf-8');
 header_remove('Location'); // Remove any Location headers that might have been set
+header('X-Diagnostic-Mode: true'); // Add a custom header to identify this page
 
 // CRITICAL: Output HTML immediately to prevent any redirects
-// This must be the FIRST output
+// This must be the FIRST output - flush immediately
 ?><!DOCTYPE html>
+<?php
+// Flush output buffer immediately to send headers and HTML
+if (ob_get_level() === 0) {
+    ob_start();
+}
+flush();
+?>
 <html>
 <head>
     <meta charset="UTF-8">
