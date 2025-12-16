@@ -1,11 +1,17 @@
 RewriteEngine On
 RewriteBase /
 
-# CRITICAL: Allow diagnostic and test files FIRST - MUST be before ALL other rules
-# These rules MUST match and stop processing immediately - NO conditions, just match and stop
-RewriteRule ^(diagnose_email_issue|test_diagnostic_simple|email_diag)\.php$ - [L]
+# CRITICAL: FIRST RULE - If the file exists, serve it directly - NO REWRITES
+# This MUST be the very first rule to prevent any other processing
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule . - [L]
 
-# Also check by REQUEST_URI to be absolutely sure
+# CRITICAL: Exclude diag subdirectory completely - NO rewrites for this directory
+RewriteCond %{REQUEST_URI} ^/diag/ [NC]
+RewriteRule . - [L]
+
+# CRITICAL: Allow diagnostic and test files - redundant but safe
+RewriteRule ^(diagnose_email_issue|test_diagnostic_simple|email_diag)\.php$ - [L]
 RewriteCond %{REQUEST_URI} ^/?(diagnose_email_issue|test_diagnostic_simple|email_diag)\.php [NC]
 RewriteRule . - [L]
 
@@ -35,12 +41,8 @@ RewriteRule ^admin(/(.*))?$ admin/index.php [L]
 RewriteCond %{REQUEST_URI} ^/diagnose_email_issue\.php$ [NC]
 RewriteRule . - [L]
 
-# CRITICAL: Check if request is for an actual file FIRST
-# If it's a real file, don't redirect to index.php
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule . - [L]
-
 # If the request is not for an actual file or directory
+# (File check already done at top, this is just for non-files)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !\.(css|js|png|jpg|jpeg|gif|ico)$ [NC]

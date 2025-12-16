@@ -1,0 +1,3 @@
+# Disable all rewrite rules in this directory
+RewriteEngine Off
+
