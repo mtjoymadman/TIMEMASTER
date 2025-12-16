@@ -1,11 +1,19 @@
 RewriteEngine On
 RewriteBase /
 
-# Explicitly allow diagnostic and live editor files (must come FIRST)
-RewriteRule ^admin/diagnose_email_issue\.php$ - [L]
-RewriteRule ^admin/live_time_editor\.php$ - [L]
+# CRITICAL: Explicitly allow diagnostic file FIRST (before any other rules)
+# Match the exact path to prevent redirects - must be FIRST rule
+RewriteCond %{REQUEST_URI} ^/admin/diagnose_email_issue\.php [NC]
+RewriteRule . - [L]
 
-# Redirect all other admin requests to index.php
+# Allow live editor
+RewriteCond %{REQUEST_URI} ^/admin/live_time_editor\.php [NC]
+RewriteRule . - [L]
+
+# Redirect all OTHER admin requests to index.php (but NOT diagnose_email_issue.php)
+RewriteCond %{REQUEST_URI} ^/admin/ [NC]
+RewriteCond %{REQUEST_URI} !^/admin/diagnose_email_issue\.php [NC]
+RewriteCond %{REQUEST_URI} !^/admin/live_time_editor\.php [NC]
 RewriteRule ^admin(/(.*))?$ admin/index.php [L]
 
 # If the request is not for an actual file or directory
@@ -23,6 +31,7 @@ RewriteCond %{REQUEST_URI} !^/css/
 RewriteCond %{REQUEST_URI} !^/js/
 RewriteCond %{REQUEST_URI} !^/lib/
 RewriteCond %{REQUEST_URI} !^/admin/
+RewriteCond %{REQUEST_URI} !^/admin/diagnose_email_issue\.php
 
 # Redirect to index.php
 RewriteRule . index.php [L]

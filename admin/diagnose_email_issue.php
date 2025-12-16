@@ -4,35 +4,58 @@
  * 
  * This script checks why email notifications are not being sent in TIMEMASTER
  * 
- * IMPORTANT: This diagnostic tool loads minimal dependencies to avoid redirects
+ * IMPORTANT: This diagnostic tool is COMPLETELY STANDALONE - no config, no session, no redirects
  */
 
-// CRITICAL: Prevent any redirects by checking script name first
-$current_script = basename($_SERVER['PHP_SELF']);
-if ($current_script !== 'diagnose_email_issue.php') {
-    // If we're being redirected, stop it
-    die("Redirect loop detected. Current script: $current_script");
+// CRITICAL: Destroy any existing session to prevent session-based redirects
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_destroy();
 }
+// Prevent session from auto-starting
+ini_set('session.auto_start', '0');
 
-// Set content type first to prevent any output issues
+// CRITICAL: Output immediately to prevent any redirects
+echo "<!-- DIAGNOSTIC PAGE LOADING -->\n";
+
+// CRITICAL: Set headers FIRST before anything else
 header('Content-Type: text/html; charset=utf-8');
+header_remove('Location'); // Remove any Location headers
 
-// Start output buffering to catch any early output
+// Prevent any output buffering issues
+if (ob_get_level() > 0) {
+    ob_end_clean();
+}
 ob_start();
 
-// Define a flag to prevent any included files from redirecting
+// Verify we're on the correct page
+$current_script = basename($_SERVER['PHP_SELF']);
+$current_uri = $_SERVER['REQUEST_URI'] ?? '';
+$script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+
+// Debug output to see what's happening
+if (isset($_GET['debug'])) {
+    echo "<!-- DEBUG INFO:\n";
+    echo "Current Script: $current_script\n";
+    echo "REQUEST_URI: $current_uri\n";
+    echo "SCRIPT_NAME: $script_name\n";
+    echo "PHP_SELF: " . ($_SERVER['PHP_SELF'] ?? 'N/A') . "\n";
+    echo "-->";
+}
+
+if ($current_script !== 'diagnose_email_issue.php' && strpos($current_uri, 'diagnose_email_issue.php') === false && strpos($script_name, 'diagnose_email_issue.php') === false) {
+    die("ERROR: Redirect detected! Script: $current_script, URI: $current_uri, SCRIPT_NAME: $script_name");
+}
+
+// Define flags BEFORE any includes
 define('DIAGNOSTIC_MODE', true);
 define('NO_REDIRECTS', true);
+define('SKIP_SESSION_CHECK', true);
+define('SKIP_AUTH_CHECK', true);
+define('TIMEMASTER_CONFIG_LOADED', true); // Prevent config.php from loading
 
-// Load only what we need - don't load full config which might have redirects
-// Instead, manually load what we need for diagnostics
-
-// Load session config manually (without redirects)
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.name', 'GROKSESSID');
-    ini_set('session.cookie_domain', '.redlionsalvage.net');
-    session_start();
-}
+// DO NOT start session - prevents session-based redirects
+// DO NOT load config.php - it has redirects
+// DO NOT load functions.php - it might have redirects
 
 // Load database config manually
 define('TIME_DB_HOST', 'localhost');
