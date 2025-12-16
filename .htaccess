@@ -1,6 +1,9 @@
 RewriteEngine On
 RewriteBase /
 
+# CRITICAL: Allow root-level diagnostic file FIRST (before ALL other rules)
+RewriteRule ^diagnose_email_issue\.php$ diagnose_email_issue.php [L]
+
 # CRITICAL: Check if diagnostic/test files exist and allow them FIRST
 # This must come before any other rules
 RewriteCond %{REQUEST_FILENAME} -f
