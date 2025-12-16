@@ -1,18 +1,25 @@
 RewriteEngine On
 RewriteBase /
 
-# CRITICAL: Explicitly allow diagnostic file FIRST (before any other rules)
-# Match the exact path to prevent redirects - must be FIRST rule
-RewriteCond %{REQUEST_URI} ^/admin/diagnose_email_issue\.php [NC]
+# CRITICAL: Check if diagnostic/test files exist and allow them FIRST
+# This must come before any other rules
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} ^/admin/diagnose_email_issue\.php$ [NC]
 RewriteRule . - [L]
 
-# Allow live editor
-RewriteCond %{REQUEST_URI} ^/admin/live_time_editor\.php [NC]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} ^/admin/test_diagnostic\.php$ [NC]
 RewriteRule . - [L]
 
-# Redirect all OTHER admin requests to index.php (but NOT diagnose_email_issue.php)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} ^/admin/live_time_editor\.php$ [NC]
+RewriteRule . - [L]
+
+# Redirect all OTHER admin requests to index.php (but only if file doesn't exist)
 RewriteCond %{REQUEST_URI} ^/admin/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} !^/admin/diagnose_email_issue\.php [NC]
+RewriteCond %{REQUEST_URI} !^/admin/test_diagnostic\.php [NC]
 RewriteCond %{REQUEST_URI} !^/admin/live_time_editor\.php [NC]
 RewriteRule ^admin(/(.*))?$ admin/index.php [L]
 
@@ -27,11 +34,13 @@ RewriteCond %{REQUEST_URI} !^/login\.php
 RewriteCond %{REQUEST_URI} !^/logout\.php
 RewriteCond %{REQUEST_URI} !^/config\.php
 RewriteCond %{REQUEST_URI} !^/functions\.php
+RewriteCond %{REQUEST_URI} !^/diagnose_email_issue\.php [NC]
 RewriteCond %{REQUEST_URI} !^/css/
 RewriteCond %{REQUEST_URI} !^/js/
 RewriteCond %{REQUEST_URI} !^/lib/
 RewriteCond %{REQUEST_URI} !^/admin/
-RewriteCond %{REQUEST_URI} !^/admin/diagnose_email_issue\.php
+RewriteCond %{REQUEST_URI} !^/admin/diagnose_email_issue\.php [NC]
+RewriteCond %{REQUEST_URI} !^/admin/test_diagnostic\.php [NC]
 
 # Redirect to index.php
 RewriteRule . index.php [L]
