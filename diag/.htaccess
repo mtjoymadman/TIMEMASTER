@@ -1,3 +1,5 @@
 # Disable all rewrite rules in this directory
 RewriteEngine Off
 
+# Allow direct access to all files
+Options +Indexes
