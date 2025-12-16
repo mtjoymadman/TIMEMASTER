@@ -7,8 +7,12 @@
  * IMPORTANT: This diagnostic tool is COMPLETELY STANDALONE - no config, no session, no redirects
  */
 
+// CRITICAL: Send headers FIRST to prevent any redirects
+header('Content-Type: text/html; charset=utf-8');
+header_remove('Location'); // Remove any Location headers that might have been set
+
 // CRITICAL: Output HTML immediately to prevent any redirects
-// Headers must be set before any output, but we'll output HTML immediately to prevent redirects
+// This must be the FIRST output
 ?><!DOCTYPE html>
 <html>
 <head>

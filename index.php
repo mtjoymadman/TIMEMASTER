@@ -1,9 +1,15 @@
 <?php
-// CRITICAL: Exit immediately if this is a diagnostic request
+// CRITICAL: Exit immediately if this is a diagnostic or test request
 // This prevents any redirects or session checks
-if (basename($_SERVER['PHP_SELF'] ?? '') === 'diagnose_email_issue.php' || 
-    strpos($_SERVER['REQUEST_URI'] ?? '', 'diagnose_email_issue.php') !== false) {
-    exit(); // Let the diagnostic file handle itself
+$script_name = basename($_SERVER['PHP_SELF'] ?? '');
+$request_uri = $_SERVER['REQUEST_URI'] ?? '';
+$allowed_files = ['diagnose_email_issue.php', 'test_diagnostic_simple.php'];
+
+foreach ($allowed_files as $file) {
+    if ($script_name === $file || strpos($request_uri, $file) !== false) {
+        http_response_code(404); // Return 404 to prevent any processing
+        exit(); // Let the diagnostic file handle itself
+    }
 }
 
 // Load configuration
