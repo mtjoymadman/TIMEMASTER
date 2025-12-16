@@ -2,14 +2,15 @@ RewriteEngine On
 RewriteBase /
 
 # CRITICAL: Allow diagnostic and test files FIRST - MUST be before ALL other rules
-# These rules MUST match and stop processing immediately
-RewriteCond %{REQUEST_URI} ^/?diagnose_email_issue\.php$ [NC,OR]
-RewriteCond %{REQUEST_URI} ^/?test_diagnostic_simple\.php$ [NC]
+# These rules MUST match and stop processing immediately - NO conditions, just match and stop
+RewriteRule ^diagnose_email_issue\.php$ - [L]
+RewriteRule ^test_diagnostic_simple\.php$ - [L]
+
+# Also check by REQUEST_URI to be absolutely sure
+RewriteCond %{REQUEST_URI} ^/?diagnose_email_issue\.php [NC]
 RewriteRule . - [L]
 
-# Also check by filename
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteCond %{REQUEST_FILENAME} (diagnose_email_issue|test_diagnostic_simple)\.php$ [NC]
+RewriteCond %{REQUEST_URI} ^/?test_diagnostic_simple\.php [NC]
 RewriteRule . - [L]
 
 # CRITICAL: Check if diagnostic/test files exist and allow them FIRST
