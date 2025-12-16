@@ -4,11 +4,21 @@
 $script_name = basename($_SERVER['PHP_SELF'] ?? '');
 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
 $allowed_files = ['diagnose_email_issue.php', 'test_diagnostic_simple.php', 'email_diag.php'];
+$allowed_paths = ['/diag/', '/diag/test.php', '/diag/email.php'];
 
+// Check if request is for a diagnostic file
 foreach ($allowed_files as $file) {
     if ($script_name === $file || strpos($request_uri, $file) !== false) {
-        http_response_code(404); // Return 404 to prevent any processing
-        exit(); // Let the diagnostic file handle itself
+        // Don't process - let the actual file handle the request
+        exit();
+    }
+}
+
+// Check if request is for a diagnostic path
+foreach ($allowed_paths as $path) {
+    if (strpos($request_uri, $path) !== false) {
+        // Don't process - let the actual file handle the request
+        exit();
     }
 }
 
