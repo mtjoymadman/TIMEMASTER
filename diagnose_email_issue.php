@@ -34,65 +34,86 @@
     <h1>Email Notification Diagnostic Tool</h1>
     
     <?php
-    // Now destroy any existing session to prevent session-based redirects
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_destroy();
-    }
-    // Prevent session from auto-starting
-    ini_set('session.auto_start', '0');
-
-    // Define flags BEFORE any includes
-    define('DIAGNOSTIC_MODE', true);
-    define('NO_REDIRECTS', true);
-    define('SKIP_SESSION_CHECK', true);
-    define('SKIP_AUTH_CHECK', true);
-    define('TIMEMASTER_CONFIG_LOADED', true); // Prevent config.php from loading
-
-    // Verify we're on the correct page
-    $current_script = basename($_SERVER['PHP_SELF']);
-    $current_uri = $_SERVER['REQUEST_URI'] ?? '';
-    $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
-
-    // Debug output to see what's happening
-    if (isset($_GET['debug'])) {
-        echo "<!-- DEBUG INFO:\n";
-        echo "Current Script: $current_script\n";
-        echo "REQUEST_URI: $current_uri\n";
-        echo "SCRIPT_NAME: $script_name\n";
-        echo "PHP_SELF: " . ($_SERVER['PHP_SELF'] ?? 'N/A') . "\n";
-        echo "-->";
-    }
-
-    if ($current_script !== 'diagnose_email_issue.php' && strpos($current_uri, 'diagnose_email_issue.php') === false && strpos($script_name, 'diagnose_email_issue.php') === false) {
-        echo "<div class='section'><p class='error'>ERROR: Redirect detected! Script: $current_script, URI: $current_uri, SCRIPT_NAME: $script_name</p></div>";
-    }
-
-    // Load database config manually
-    define('TIME_DB_HOST', 'localhost');
-    define('TIME_DB_USER', 'salvageyard_time');
-    define('TIME_DB_PASS', '7361dead');
-    define('TIME_DB_NAME', 'salvageyard_time');
-
-    // Initialize database connection
+    // Enable error display for diagnostics
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    ini_set('log_errors', 1);
+    
+    // Wrap everything in try-catch to prevent crashes
     try {
-        $time_db = new mysqli(TIME_DB_HOST, TIME_DB_USER, TIME_DB_PASS, TIME_DB_NAME);
-        if ($time_db->connect_error) {
-            throw new Exception("Database connection failed: " . $time_db->connect_error);
+        // Now destroy any existing session to prevent session-based redirects
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            @session_destroy();
+        }
+        // Prevent session from auto-starting
+        @ini_set('session.auto_start', '0');
+
+        // Define flags BEFORE any includes
+        if (!defined('DIAGNOSTIC_MODE')) define('DIAGNOSTIC_MODE', true);
+        if (!defined('NO_REDIRECTS')) define('NO_REDIRECTS', true);
+        if (!defined('SKIP_SESSION_CHECK')) define('SKIP_SESSION_CHECK', true);
+        if (!defined('SKIP_AUTH_CHECK')) define('SKIP_AUTH_CHECK', true);
+        if (!defined('TIMEMASTER_CONFIG_LOADED')) define('TIMEMASTER_CONFIG_LOADED', true); // Prevent config.php from loading
+
+        // Verify we're on the correct page
+        $current_script = basename($_SERVER['PHP_SELF'] ?? 'diagnose_email_issue.php');
+        $current_uri = $_SERVER['REQUEST_URI'] ?? '';
+        $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+
+        // Debug output to see what's happening
+        if (isset($_GET['debug'])) {
+            echo "<!-- DEBUG INFO:\n";
+            echo "Current Script: $current_script\n";
+            echo "REQUEST_URI: $current_uri\n";
+            echo "SCRIPT_NAME: $script_name\n";
+            echo "PHP_SELF: " . ($_SERVER['PHP_SELF'] ?? 'N/A') . "\n";
+            echo "-->";
+        }
+
+        if ($current_script !== 'diagnose_email_issue.php' && strpos($current_uri, 'diagnose_email_issue.php') === false && strpos($script_name, 'diagnose_email_issue.php') === false) {
+            echo "<div class='section'><p class='error'>ERROR: Redirect detected! Script: $current_script, URI: $current_uri, SCRIPT_NAME: $script_name</p></div>";
+        }
+
+        // Load database config manually
+        if (!defined('TIME_DB_HOST')) define('TIME_DB_HOST', 'localhost');
+        if (!defined('TIME_DB_USER')) define('TIME_DB_USER', 'salvageyard_time');
+        if (!defined('TIME_DB_PASS')) define('TIME_DB_PASS', '7361dead');
+        if (!defined('TIME_DB_NAME')) define('TIME_DB_NAME', 'salvageyard_time');
+
+        // Initialize database connection
+        $time_db = null;
+        try {
+            $time_db = @new mysqli(TIME_DB_HOST, TIME_DB_USER, TIME_DB_PASS, TIME_DB_NAME);
+            if ($time_db && $time_db->connect_error) {
+                throw new Exception("Database connection failed: " . $time_db->connect_error);
+            }
+        } catch (Exception $e) {
+            $time_db = null;
+        } catch (Error $e) {
+            $time_db = null;
+        }
+
+        // Define NOTIFY_EMAIL if not defined
+        if (!defined('NOTIFY_EMAIL')) {
+            define('NOTIFY_EMAIL', 'mtjoymadman@gmail.com, ifree2bmenow@yahoo.com, margie@redlionsalvage.net');
+        }
+
+        // Load only the functions we need (not the full functions.php which might have redirects)
+        @date_default_timezone_set('America/New_York');
+
+        if (!function_exists('getCurrentEasternTime')) {
+            function getCurrentEasternTime() {
+                try {
+                    return new DateTime('now', new DateTimeZone('America/New_York'));
+                } catch (Exception $e) {
+                    return new DateTime();
+                }
+            }
         }
     } catch (Exception $e) {
-        $time_db = null;
-    }
-
-    // Define NOTIFY_EMAIL if not defined
-    if (!defined('NOTIFY_EMAIL')) {
-        define('NOTIFY_EMAIL', 'mtjoymadman@gmail.com, ifree2bmenow@yahoo.com, margie@redlionsalvage.net');
-    }
-
-    // Load only the functions we need (not the full functions.php which might have redirects)
-    date_default_timezone_set('America/New_York');
-
-    function getCurrentEasternTime() {
-        return new DateTime('now', new DateTimeZone('America/New_York'));
+        echo "<div class='section'><p class='error'>Fatal Error in initialization: " . htmlspecialchars($e->getMessage()) . "</p></div>";
+    } catch (Error $e) {
+        echo "<div class='section'><p class='error'>Fatal PHP Error: " . htmlspecialchars($e->getMessage()) . "</p><p>File: " . htmlspecialchars($e->getFile()) . " Line: " . $e->getLine() . "</p></div>";
     }
 
     echo "<div class='section'>";
@@ -138,23 +159,48 @@
                 define('NO_REDIRECTS', true);
             }
             
-            require_once $smtp_config_path;
-            echo "<p class='success'>✓ smtp_config.php loaded successfully</p>";
+            // Suppress warnings/errors during require
+            $old_error_reporting = error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+            $old_display_errors = ini_get('display_errors');
+            ini_set('display_errors', '0');
             
-            // Check constants
-            echo "<h3>SMTP Constants:</h3>";
-            echo "<ul>";
-            echo "<li>SMTP_HOST: " . (defined('SMTP_HOST') ? SMTP_HOST : '<span class="error">NOT DEFINED</span>') . "</li>";
-            echo "<li>SMTP_PORT: " . (defined('SMTP_PORT') ? SMTP_PORT : '<span class="error">NOT DEFINED</span>') . "</li>";
-            echo "<li>SMTP_USERNAME: " . (defined('SMTP_USERNAME') ? SMTP_USERNAME : '<span class="error">NOT DEFINED</span>') . "</li>";
-            echo "<li>SMTP_PASSWORD: " . (defined('SMTP_PASSWORD') ? (strlen(SMTP_PASSWORD) > 0 ? '***SET***' : '<span class="error">EMPTY</span>') : '<span class="error">NOT DEFINED</span>') . "</li>";
-            echo "<li>SMTP_FROM_EMAIL: " . (defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : '<span class="error">NOT DEFINED</span>') . "</li>";
-            echo "<li>SMTP_SECURE: " . (defined('SMTP_SECURE') ? SMTP_SECURE : '<span class="error">NOT DEFINED</span>') . "</li>";
-            echo "</ul>";
+            // Capture any output
+            ob_start();
+            $load_result = @require_once $smtp_config_path;
+            $output = ob_get_clean();
+            
+            // Restore error settings
+            error_reporting($old_error_reporting);
+            ini_set('display_errors', $old_display_errors);
+            
+            if ($load_result !== false) {
+                echo "<p class='success'>✓ smtp_config.php loaded successfully</p>";
+                
+                // Check constants
+                echo "<h3>SMTP Constants:</h3>";
+                echo "<ul>";
+                echo "<li>SMTP_HOST: " . (defined('SMTP_HOST') ? htmlspecialchars(SMTP_HOST) : '<span class="error">NOT DEFINED</span>') . "</li>";
+                echo "<li>SMTP_PORT: " . (defined('SMTP_PORT') ? htmlspecialchars(SMTP_PORT) : '<span class="error">NOT DEFINED</span>') . "</li>";
+                echo "<li>SMTP_USERNAME: " . (defined('SMTP_USERNAME') ? htmlspecialchars(SMTP_USERNAME) : '<span class="error">NOT DEFINED</span>') . "</li>";
+                echo "<li>SMTP_PASSWORD: " . (defined('SMTP_PASSWORD') ? (strlen(SMTP_PASSWORD) > 0 ? '***SET***' : '<span class="error">EMPTY</span>') : '<span class="error">NOT DEFINED</span>') . "</li>";
+                echo "<li>SMTP_FROM_EMAIL: " . (defined('SMTP_FROM_EMAIL') ? htmlspecialchars(SMTP_FROM_EMAIL) : '<span class="error">NOT DEFINED</span>') . "</li>";
+                echo "<li>SMTP_SECURE: " . (defined('SMTP_SECURE') ? htmlspecialchars(SMTP_SECURE) : '<span class="error">NOT DEFINED</span>') . "</li>";
+                echo "</ul>";
+            } else {
+                echo "<p class='error'>✗ Failed to load smtp_config.php</p>";
+                if (!empty($output)) {
+                    echo "<p class='warning'>Output during load: " . htmlspecialchars($output) . "</p>";
+                }
+            }
         } catch (Exception $e) {
-            echo "<p class='error'>✗ Error loading smtp_config.php: " . $e->getMessage() . "</p>";
+            echo "<p class='error'>✗ Error loading smtp_config.php: " . htmlspecialchars($e->getMessage()) . "</p>";
+            echo "<p class='warning'>File: " . htmlspecialchars($e->getFile()) . " Line: " . $e->getLine() . "</p>";
         } catch (Error $e) {
-            echo "<p class='error'>✗ Fatal error loading smtp_config.php: " . $e->getMessage() . "</p>";
+            echo "<p class='error'>✗ Fatal error loading smtp_config.php: " . htmlspecialchars($e->getMessage()) . "</p>";
+            echo "<p class='warning'>File: " . htmlspecialchars($e->getFile()) . " Line: " . $e->getLine() . "</p>";
+        } catch (Throwable $e) {
+            echo "<p class='error'>✗ Throwable error loading smtp_config.php: " . htmlspecialchars($e->getMessage()) . "</p>";
+            echo "<p class='warning'>File: " . htmlspecialchars($e->getFile()) . " Line: " . $e->getLine() . "</p>";
         }
     } else {
         echo "<p class='error'>✗ smtp_config.php NOT FOUND at: $smtp_config_path</p>";
@@ -259,9 +305,22 @@
             $functions_path = __DIR__ . '/functions.php';
             if (file_exists($functions_path)) {
                 // Load only if sendNotification exists in it
-                ob_start();
-                require_once $functions_path;
-                ob_end_clean();
+                try {
+                    $old_error_reporting = error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+                    $old_display_errors = ini_get('display_errors');
+                    ini_set('display_errors', '0');
+                    
+                    ob_start();
+                    @require_once $functions_path;
+                    ob_end_clean();
+                    
+                    error_reporting($old_error_reporting);
+                    ini_set('display_errors', $old_display_errors);
+                } catch (Exception $e) {
+                    // Ignore errors loading functions.php
+                } catch (Error $e) {
+                    // Ignore errors loading functions.php
+                }
             }
         }
         
