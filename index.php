@@ -3,7 +3,7 @@
 // This prevents any redirects or session checks
 $script_name = basename($_SERVER['PHP_SELF'] ?? '');
 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-$allowed_files = ['diagnose_email_issue.php', 'test_diagnostic_simple.php'];
+$allowed_files = ['diagnose_email_issue.php', 'test_diagnostic_simple.php', 'email_diag.php'];
 
 foreach ($allowed_files as $file) {
     if ($script_name === $file || strpos($request_uri, $file) !== false) {
