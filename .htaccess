@@ -1,13 +1,15 @@
 RewriteEngine On
 RewriteBase /
 
+# CRITICAL: Exclude diag subdirectory FIRST - NO rewrites for this directory
+# This must be before the file check to ensure it's processed
+RewriteCond %{REQUEST_URI} ^/diag/ [NC,OR]
+RewriteCond %{REQUEST_URI} ^/diag
+RewriteRule . - [L]
+
 # CRITICAL: FIRST RULE - If the file exists, serve it directly - NO REWRITES
 # This MUST be the very first rule to prevent any other processing
 RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule . - [L]
-
-# CRITICAL: Exclude diag subdirectory completely - NO rewrites for this directory
-RewriteCond %{REQUEST_URI} ^/diag/ [NC]
 RewriteRule . - [L]
 
 # Redirect all admin requests to admin/index.php (but only if file doesn't exist)
