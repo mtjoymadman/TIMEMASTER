@@ -7,11 +7,22 @@
  * IMPORTANT: This diagnostic tool loads minimal dependencies to avoid redirects
  */
 
+// CRITICAL: Prevent any redirects by checking script name first
+$current_script = basename($_SERVER['PHP_SELF']);
+if ($current_script !== 'diagnose_email_issue.php') {
+    // If we're being redirected, stop it
+    die("Redirect loop detected. Current script: $current_script");
+}
+
 // Set content type first to prevent any output issues
 header('Content-Type: text/html; charset=utf-8');
 
 // Start output buffering to catch any early output
 ob_start();
+
+// Define a flag to prevent any included files from redirecting
+define('DIAGNOSTIC_MODE', true);
+define('NO_REDIRECTS', true);
 
 // Load only what we need - don't load full config which might have redirects
 // Instead, manually load what we need for diagnostics
@@ -114,10 +125,24 @@ ob_end_clean();
         if (file_exists($smtp_config_path)) {
             echo "<p class='success'>✓ smtp_config.php found</p>";
             
-            // Check if we can load it
+            // Check if we can load it (but prevent any redirects)
             try {
+                // Prevent redirects during loading by checking for NO_REDIRECTS flag
+                if (!defined('NO_REDIRECTS')) {
+                    define('NO_REDIRECTS', true);
+                }
+                
+                // Suppress any output/redirects during require
+                ob_start();
                 require_once $smtp_config_path;
-                echo "<p class='success'>✓ smtp_config.php loaded successfully</p>";
+                $output = ob_get_clean();
+                
+                // Check if output contains redirect headers
+                if (stripos($output, 'Location:') !== false || stripos($output, 'header') !== false) {
+                    echo "<p class='warning'>⚠ smtp_config.php attempted to redirect (output suppressed)</p>";
+                } else {
+                    echo "<p class='success'>✓ smtp_config.php loaded successfully</p>";
+                }
                 
                 // Check constants
                 echo "<h3>SMTP Constants:</h3>";

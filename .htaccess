@@ -1,9 +1,11 @@
 RewriteEngine On
 RewriteBase /
 
-# Protect live_time_editor.php and diagnostic tools
-RewriteRule ^admin/live_time_editor\.php$ admin/live_time_editor.php [L]
-RewriteRule ^admin/diagnose_email_issue\.php$ admin/diagnose_email_issue.php [L]
+# Explicitly allow diagnostic and live editor files (must come FIRST)
+RewriteRule ^admin/diagnose_email_issue\.php$ - [L]
+RewriteRule ^admin/live_time_editor\.php$ - [L]
+
+# Redirect all other admin requests to index.php
 RewriteRule ^admin(/(.*))?$ admin/index.php [L]
 
 # If the request is not for an actual file or directory
