@@ -2,7 +2,14 @@ RewriteEngine On
 RewriteBase /
 
 # CRITICAL: Allow root-level diagnostic file FIRST (before ALL other rules)
-RewriteRule ^diagnose_email_issue\.php$ diagnose_email_issue.php [L]
+# Check if the file exists and explicitly allow it
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} ^/diagnose_email_issue\.php$ [NC]
+RewriteRule . - [L]
+
+# Also allow it even if file check fails (for debugging)
+RewriteCond %{REQUEST_URI} ^/diagnose_email_issue\.php$ [NC]
+RewriteRule . - [L]
 
 # CRITICAL: Check if diagnostic/test files exist and allow them FIRST
 # This must come before any other rules
@@ -25,6 +32,10 @@ RewriteCond %{REQUEST_URI} !^/admin/diagnose_email_issue\.php [NC]
 RewriteCond %{REQUEST_URI} !^/admin/test_diagnostic\.php [NC]
 RewriteCond %{REQUEST_URI} !^/admin/live_time_editor\.php [NC]
 RewriteRule ^admin(/(.*))?$ admin/index.php [L]
+
+# CRITICAL: Explicitly allow diagnose_email_issue.php BEFORE any other rules
+RewriteCond %{REQUEST_URI} ^/diagnose_email_issue\.php$ [NC]
+RewriteRule . - [L]
 
 # If the request is not for an actual file or directory
 RewriteCond %{REQUEST_FILENAME} !-f
